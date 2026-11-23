@@ -10,6 +10,7 @@ import type {
 import { nowISO, uid } from "./format";
 import { buildSeedState } from "./seed";
 import { toggleDelivery } from "./records";
+import { normalizeState } from "./backup";
 
 /**
  * Single source of truth. Persists to localStorage today; swap `persistence`
@@ -27,12 +28,8 @@ const persistence: Persistence = {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      const p = JSON.parse(raw) as Partial<PersistedState>;
-      return {
-        inventory: Array.isArray(p.inventory) ? p.inventory : [],
-        services: Array.isArray(p.services) ? p.services : [],
-        fourthLabel: typeof p.fourthLabel === "string" ? p.fourthLabel : "",
-      };
+      // Lenient: fills in fields added later (e.g. receipt date on older orders) and skips broken rows.
+      return normalizeState(JSON.parse(raw)).state;
     } catch {
       return null;
     }
@@ -129,6 +126,10 @@ export const laundry = {
   },
   restoreSeed() {
     setState(() => buildSeedState());
+  },
+  /** Replaces every record, e.g. from a validated JSON backup. */
+  replaceAll(next: PersistedState) {
+    setState(() => ({ inventory: next.inventory, services: next.services, fourthLabel: next.fourthLabel }));
   },
 };
 

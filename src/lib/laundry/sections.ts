@@ -5,7 +5,7 @@ export const SECTION_LABELS: Record<SectionKey, string> = {
   blankets: "الحرامات",
   tailoring: "التصليح والخياطة",
   washing: "الغسيل",
-  fourth: "الواجهة الرابعة",
+  fourth: "الكوي",
 };
 
 export const ITEM_COUNT_LABELS: Record<InventorySectionKey, string> = {
@@ -16,5 +16,5 @@ export const ITEM_COUNT_LABELS: Record<InventorySectionKey, string> = {
 export const SERVICE_DETAILS_LABELS: Record<ServiceSectionKey, string> = {
   tailoring: "تفاصيل التصليح",
   washing: "تفاصيل الغسيل",
-  fourth: "تفاصيل الخدمة / التصليح والغسيل",
+  fourth: "تفاصيل الكوي",
 };

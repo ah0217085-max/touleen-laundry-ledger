@@ -1,8 +1,11 @@
 import type { ServiceRecord } from "@/lib/laundry/types";
+import { formatDate } from "@/lib/laundry/format";
 import { laundry } from "@/lib/laundry/store";
 import { DeliveryToggle } from "./DeliveryToggle";
 import { RowActions } from "./RowActions";
 import { Money } from "./Money";
+import { ContactActions } from "./ContactActions";
+import { DeliveredStamp } from "./DeliveredStamp";
 
 interface Props {
   records: ServiceRecord[];
@@ -11,8 +14,8 @@ interface Props {
   onDelete: (r: ServiceRecord) => void;
 }
 
-const th = "px-4 py-3 text-start text-xs font-extrabold text-muted-foreground whitespace-nowrap";
-const td = "px-4 py-3";
+const th = "px-3 py-3 text-start text-xs font-extrabold text-muted-foreground whitespace-nowrap";
+const td = "px-3 py-3";
 
 export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) {
   return (
@@ -21,21 +24,29 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
         {records.map((r) => (
           <li key={r.id} className="glass rounded-3xl p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="truncate text-base font-extrabold text-foreground">{r.customerName}</h3>
-                <p className="tnum mt-0.5 text-sm font-semibold text-muted-foreground" dir="ltr">
-                  {r.phoneNumber}
-                </p>
-              </div>
+              <h3 className="min-w-0 truncate pt-2 text-base font-extrabold text-foreground">{r.customerName}</h3>
               <DeliveryToggle
                 isDelivered={r.isDelivered}
                 customerName={r.customerName}
                 onToggle={() => laundry.toggleService(r.id)}
               />
             </div>
+            <ContactActions phone={r.phoneNumber} customerName={r.customerName} className="mt-2" />
             <div className="mt-3 rounded-2xl bg-glass-strong p-3">
               <p className="text-xs font-semibold text-muted-foreground">{detailsLabel}</p>
               <p className="mt-0.5 text-sm font-bold leading-relaxed text-foreground">{r.serviceDetails}</p>
+              <dl className="mt-2 grid grid-cols-2 gap-2 border-t border-glass-border pt-2 text-sm">
+                <div>
+                  <dt className="text-xs font-semibold text-muted-foreground">تاريخ الاستلام</dt>
+                  <dd className="mt-0.5 font-bold text-foreground">{formatDate(r.receivedDate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-muted-foreground">تاريخ التسليم</dt>
+                  <dd className="mt-0.5 text-xs">
+                    <DeliveredStamp isDelivered={r.isDelivered} deliveredAt={r.deliveredAt} />
+                  </dd>
+                </div>
+              </dl>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
               <p className="text-sm">
@@ -55,6 +66,7 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
               <th className={th}>اسم الزبون</th>
               <th className={th}>رقم الهاتف</th>
               <th className={th}>{detailsLabel}</th>
+              <th className={th}>تاريخ الاستلام</th>
               <th className={th}>الفاتورة المطلوبة</th>
               <th className={th}>حالة التسليم</th>
               <th className={th}>
@@ -66,10 +78,11 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
             {records.map((r) => (
               <tr key={r.id} className="border-t border-glass-border transition hover:bg-glass-strong/60">
                 <td className={`${td} whitespace-nowrap font-extrabold text-foreground`}>{r.customerName}</td>
-                <td className={`${td} tnum whitespace-nowrap font-semibold text-muted-foreground`} dir="ltr">
-                  {r.phoneNumber}
+                <td className={`${td} whitespace-nowrap`}>
+                  <ContactActions phone={r.phoneNumber} customerName={r.customerName} className="flex-nowrap" compact />
                 </td>
-                <td className={`${td} min-w-48 font-semibold leading-relaxed`}>{r.serviceDetails}</td>
+                <td className={`${td} min-w-40 font-semibold leading-relaxed`}>{r.serviceDetails}</td>
+                <td className={`${td} whitespace-nowrap font-semibold`}>{formatDate(r.receivedDate)}</td>
                 <td className={`${td} whitespace-nowrap`}>
                   <Money value={r.invoiceAmount} />
                 </td>
@@ -79,6 +92,11 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
                     customerName={r.customerName}
                     onToggle={() => laundry.toggleService(r.id)}
                   />
+                  {r.isDelivered && (
+                    <div className="mt-1 whitespace-nowrap text-xs">
+                      <DeliveredStamp isDelivered={r.isDelivered} deliveredAt={r.deliveredAt} />
+                    </div>
+                  )}
                 </td>
                 <td className={`${td} w-0`}>
                   <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />

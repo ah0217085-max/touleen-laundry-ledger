@@ -30,7 +30,7 @@ const SERVICES: SvcSeed[] = [
   ["washing", "هبة الخطيب", "0944332211", "غسيل سترة شتوية ووشاح", 9000, 5, 1],
   ["washing", "جود الحسن", "0937001122", "غسيل وكيّ 6 قطع ملابس أطفال", 11000, 1, null],
   ["fourth", "رامي منصور", "0933445566", "كيّ وترتيب ملابس موسمية", 6000, 1, null],
-  ["fourth", "دانا الأحمد", "0996554433", "غسيل فستان سهرة + تصليح الحزام", 18000, 3, 1],
+  ["fourth", "دانا الأحمد", "0996554433", "كيّ فستان سهرة وبدلة رسمية", 18000, 3, 1],
 ];
 
 export function buildSeedState(): PersistedState {
@@ -58,6 +58,7 @@ export function buildSeedState(): PersistedState {
       customerName,
       phoneNumber,
       serviceDetails,
+      receivedDate: toISODate(daysAgo(created)),
       invoiceAmount,
       isDelivered: delivered !== null,
       deliveredAt,

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { laundry, useLaundry } from "@/lib/laundry/store";
 import { inputClass } from "./Field";
 
-/** Optional sub-label shown under "الواجهة الرابعة" (the title itself stays fixed). */
+/** Optional sub-label shown under "الكوي" (the title itself stays fixed). */
 export function FourthLabelEditor() {
   const { fourthLabel, ready } = useLaundry();
   const [editing, setEditing] = useState(false);
@@ -27,7 +27,7 @@ export function FourthLabelEditor() {
           value={draft}
           maxLength={40}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="تسمية فرعية اختيارية، مثال: الكيّ والترتيب"
+          placeholder="تسمية فرعية اختيارية، مثال: كيّ وترتيب الملابس"
           aria-label="التسمية الفرعية"
           className={`${inputClass} h-10 flex-1 text-sm`}
         />

@@ -4,6 +4,8 @@ import { laundry } from "@/lib/laundry/store";
 import { DeliveryToggle } from "./DeliveryToggle";
 import { RowActions } from "./RowActions";
 import { Money } from "./Money";
+import { ContactActions } from "./ContactActions";
+import { DeliveredStamp } from "./DeliveredStamp";
 
 interface Props {
   records: InventoryRecord[];
@@ -23,18 +25,14 @@ export function InventoryList({ records, countLabel, onEdit, onDelete }: Props) 
         {records.map((r) => (
           <li key={r.id} className="glass rounded-3xl p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="truncate text-base font-extrabold text-foreground">{r.customerName}</h3>
-                <p className="tnum mt-0.5 text-sm font-semibold text-muted-foreground" dir="ltr">
-                  {r.customerNumber}
-                </p>
-              </div>
+              <h3 className="min-w-0 truncate pt-2 text-base font-extrabold text-foreground">{r.customerName}</h3>
               <DeliveryToggle
                 isDelivered={r.isDelivered}
                 customerName={r.customerName}
                 onToggle={() => laundry.toggleInventory(r.id)}
               />
             </div>
+            <ContactActions phone={r.customerNumber} customerName={r.customerName} className="mt-2" />
             <dl className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-glass-strong p-3 text-sm">
               <div>
                 <dt className="text-xs font-semibold text-muted-foreground">{countLabel}</dt>
@@ -50,6 +48,14 @@ export function InventoryList({ records, countLabel, onEdit, onDelete }: Props) 
                   <Money value={r.invoiceAmount} />
                 </dd>
               </div>
+              {r.isDelivered && (
+                <div className="col-span-3 border-t border-glass-border pt-2">
+                  <dt className="text-xs font-semibold text-muted-foreground">تاريخ التسليم</dt>
+                  <dd className="mt-0.5 text-sm">
+                    <DeliveredStamp isDelivered={r.isDelivered} deliveredAt={r.deliveredAt} />
+                  </dd>
+                </div>
+              )}
             </dl>
             <div className="mt-2 flex justify-end">
               <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />
@@ -79,8 +85,8 @@ export function InventoryList({ records, countLabel, onEdit, onDelete }: Props) 
               <tr key={r.id} className="border-t border-glass-border transition hover:bg-glass-strong/60">
                 <td className={`${td} font-extrabold text-foreground`}>{r.customerName}</td>
                 <td className={`${td} tnum font-bold`}>{formatNumber(r.itemCount)}</td>
-                <td className={`${td} tnum font-semibold text-muted-foreground`} dir="ltr">
-                  {r.customerNumber}
+                <td className={td}>
+                  <ContactActions phone={r.customerNumber} customerName={r.customerName} className="flex-nowrap" compact />
                 </td>
                 <td className={`${td} font-semibold`}>{formatDate(r.receivedDate)}</td>
                 <td className={td}>
@@ -92,6 +98,11 @@ export function InventoryList({ records, countLabel, onEdit, onDelete }: Props) 
                     customerName={r.customerName}
                     onToggle={() => laundry.toggleInventory(r.id)}
                   />
+                  {r.isDelivered && (
+                    <div className="mt-1 whitespace-nowrap text-xs">
+                      <DeliveredStamp isDelivered={r.isDelivered} deliveredAt={r.deliveredAt} />
+                    </div>
+                  )}
                 </td>
                 <td className={`${td} w-0`}>
                   <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />

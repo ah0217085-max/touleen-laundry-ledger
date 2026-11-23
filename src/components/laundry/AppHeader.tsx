@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { RotateCcw, Search, X } from "lucide-react";
+import { DatabaseBackup, RotateCcw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "./BrandLogo";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { BackupDialog } from "./BackupDialog";
 import { laundry, setSearchQuery, useLaundry, useSearchQuery } from "@/lib/laundry/store";
 import { filterInventory, filterServices } from "@/lib/laundry/records";
 import { formatNumber } from "@/lib/laundry/format";
@@ -12,6 +13,7 @@ export function AppHeader() {
   const query = useSearchQuery();
   const state = useLaundry();
   const [restoreOpen, setRestoreOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   const matches = useMemo(() => {
     if (!query.trim()) return 0;
@@ -23,16 +25,25 @@ export function AppHeader() {
 
   return (
     <header className="glass-strong mt-3 rounded-3xl p-3 sm:p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <BrandLogo />
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-extrabold leading-none text-foreground">
+          <h1 className="whitespace-nowrap font-display text-[1.375rem] font-extrabold leading-none text-foreground sm:text-2xl">
             مصبغة تولين
           </h1>
           <p className="mt-1.5 truncate text-xs font-semibold text-muted-foreground">
             غسيل • تنظيف سجاد • تصليح وخياطة
           </p>
         </div>
+        <Button
+          variant="glass"
+          size="icon-sm"
+          onClick={() => setBackupOpen(true)}
+          aria-label="النسخ الاحتياطي"
+          title="النسخ الاحتياطي"
+        >
+          <DatabaseBackup />
+        </Button>
         <Button
           variant="glass"
           size="icon-sm"
@@ -71,6 +82,7 @@ export function AppHeader() {
         )}
       </div>
 
+      <BackupDialog open={backupOpen} onOpenChange={setBackupOpen} />
       <ConfirmDialog
         open={restoreOpen}
         onOpenChange={setRestoreOpen}

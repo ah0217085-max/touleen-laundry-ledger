@@ -5,10 +5,10 @@ import { FourthLabelEditor } from "@/components/laundry/FourthLabelEditor";
 export const Route = createFileRoute("/fourth")({
   head: () => ({
     meta: [
-      { title: "الواجهة الرابعة — مصبغة تولين" },
-      { name: "description", content: "طلبات الخدمات الإضافية في مصبغة تولين مع الفواتير وحالة التسليم." },
-      { property: "og:title", content: "الواجهة الرابعة — مصبغة تولين" },
-      { property: "og:description", content: "متابعة طلبات الخدمات الإضافية وتسليمها." },
+      { title: "الكوي — مصبغة تولين" },
+      { name: "description", content: "طلبات الكوي في مصبغة تولين مع الفواتير وحالة التسليم." },
+      { property: "og:title", content: "الكوي — مصبغة تولين" },
+      { property: "og:description", content: "متابعة طلبات الكوي وتسليمها." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -20,7 +20,7 @@ function FourthPage() {
   return (
     <ServiceSection
       sectionKey="fourth"
-      subtitle="طلبات الخدمات الإضافية وحالة تسليمها"
+      subtitle="طلبات الكوي وحالة تسليمها"
       extra={<FourthLabelEditor />}
     />
   );

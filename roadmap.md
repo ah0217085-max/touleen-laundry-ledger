@@ -5,3 +5,9 @@
 - [x] localStorage store with seed + restore, validation
 - [x] PWA manifest (rtl/ar, pink theme, icons)
 - [x] Tests for validation + stats; browser verification
+- [x] Rename 4th view to «الكوي» (nav, heading, details label, stats)
+- [x] Call & WhatsApp buttons beside every customer number
+- [x] Auto receipt date on all records + delivery timestamp display
+- [x] JSON backup download & validated restore
+- [x] Statistics section filter (all / each section)
+- [ ] Confirm WhatsApp country code (+963 assumed) — waiting on user

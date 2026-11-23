@@ -20,11 +20,12 @@ export interface InventoryRecord extends BaseRecord {
   receivedDate: string; // YYYY-MM-DD
 }
 
-/** Tailoring / washing / fourth-view orders. */
+/** Tailoring / washing / ironing (fourth view) orders. */
 export interface ServiceRecord extends BaseRecord {
   sectionKey: ServiceSectionKey;
   phoneNumber: string;
   serviceDetails: string;
+  receivedDate: string; // YYYY-MM-DD, defaults to the day the order was created
 }
 
 type SystemFields = "id" | "isDelivered" | "deliveredAt" | "createdAt" | "updatedAt";

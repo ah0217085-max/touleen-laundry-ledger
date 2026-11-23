@@ -84,3 +84,39 @@ export function computeStats(inventory: InventoryRecord[], services: ServiceReco
     sections,
   };
 }
+
+export type StatsScope = "all" | SectionKey;
+
+export const STATS_SCOPES: StatsScope[] = ["all", "carpets", "blankets", "tailoring", "washing", "fourth"];
+
+export interface ScopedStats {
+  pendingGoods: number;
+  deliveredGoods: number;
+  pendingRevenue: number;
+  deliveredRevenue: number;
+  totalRevenue: number;
+  totalRecords: number;
+  /** "mixed" = pieces + orders (all sections combined). */
+  unit: "piece" | "order" | "mixed";
+  sections: SectionStat[];
+}
+
+/** Narrows the dashboard numbers to all sections combined or a single section. */
+export function scopeStats(stats: LaundryStats, scope: StatsScope): ScopedStats {
+  if (scope === "all") {
+    const { pendingGoods, deliveredGoods, pendingRevenue, deliveredRevenue, totalRevenue, totalRecords, sections } = stats;
+    return { pendingGoods, deliveredGoods, pendingRevenue, deliveredRevenue, totalRevenue, totalRecords, unit: "mixed", sections };
+  }
+  const s = stats.sections.find((x) => x.key === scope);
+  if (!s) return { pendingGoods: 0, deliveredGoods: 0, pendingRevenue: 0, deliveredRevenue: 0, totalRevenue: 0, totalRecords: 0, unit: "order", sections: [] };
+  return {
+    pendingGoods: s.pendingCount,
+    deliveredGoods: s.deliveredCount,
+    pendingRevenue: s.pendingRevenue,
+    deliveredRevenue: s.deliveredRevenue,
+    totalRevenue: s.totalRevenue,
+    totalRecords: s.records,
+    unit: s.unit,
+    sections: [s],
+  };
+}

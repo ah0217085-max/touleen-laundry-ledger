@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { NotebookPen, Phone, Receipt, User } from "lucide-react";
+import { CalendarDays, NotebookPen, Phone, Receipt, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GlassDialog } from "./GlassDialog";
@@ -8,6 +8,7 @@ import { SECTION_ICONS } from "./icons";
 import type { ServiceRecord, ServiceSectionKey } from "@/lib/laundry/types";
 import { validateService, type FieldErrors, type ServiceDraft } from "@/lib/laundry/validation";
 import { SECTION_LABELS, SERVICE_DETAILS_LABELS } from "@/lib/laundry/sections";
+import { todayISODate } from "@/lib/laundry/format";
 import { laundry } from "@/lib/laundry/store";
 
 interface Props {
@@ -22,6 +23,7 @@ function toDraft(r: ServiceRecord | null): ServiceDraft {
     customerName: r?.customerName ?? "",
     phoneNumber: r?.phoneNumber ?? "",
     serviceDetails: r?.serviceDetails ?? "",
+    receivedDate: r?.receivedDate ?? todayISODate(),
     invoiceAmount: r ? String(r.invoiceAmount) : "",
   };
 }
@@ -110,13 +112,17 @@ export function ServiceFormDialog({ open, onOpenChange, sectionKey, editing }: P
             {...errProps("serviceDetails")}
           />
         </Field>
-        <Field
-          id="svc-invoiceAmount"
-          label="الفاتورة المطلوبة (ل.س)"
-          error={errors["invoiceAmount"]}
-          icon={<Receipt />}
-          className="sm:col-span-2"
-        >
+        <Field id="svc-receivedDate" label="تاريخ الاستلام" error={errors["receivedDate"]} icon={<CalendarDays />}>
+          <input
+            id="svc-receivedDate"
+            type="date"
+            className={`${inputClass} h-12`}
+            value={draft.receivedDate}
+            onChange={(e) => set("receivedDate")(e.target.value)}
+            {...errProps("receivedDate")}
+          />
+        </Field>
+        <Field id="svc-invoiceAmount" label="الفاتورة المطلوبة (ل.س)" error={errors["invoiceAmount"]} icon={<Receipt />}>
           <input
             id="svc-invoiceAmount"
             type="number"

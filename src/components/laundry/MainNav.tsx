@@ -5,7 +5,7 @@ const NAV = [
   { to: "/", label: "السجاد والحرامات", icon: NAV_ICONS.inventory },
   { to: "/tailoring", label: "التصليح والخياطة", icon: NAV_ICONS.tailoring },
   { to: "/washing", label: "الغسيل", icon: NAV_ICONS.washing },
-  { to: "/fourth", label: "الواجهة الرابعة", icon: NAV_ICONS.fourth },
+  { to: "/fourth", label: "الكوي", icon: NAV_ICONS.fourth },
   { to: "/stats", label: "الإحصائيات", icon: NAV_ICONS.stats },
 ] as const;
 

@@ -1,5 +1,5 @@
 import type { InventoryInput, InventorySectionKey, ServiceInput, ServiceSectionKey } from "./types";
-import { clean } from "./format";
+import { clean, isValidISODate } from "./format";
 
 export type FieldErrors = Partial<Record<string, string>>;
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; errors: FieldErrors };
@@ -16,6 +16,7 @@ export interface ServiceDraft {
   customerName: string;
   phoneNumber: string;
   serviceDetails: string;
+  receivedDate: string;
   invoiceAmount: string;
 }
 
@@ -55,8 +56,7 @@ export function validateInventory(
   const count = parseNumber(d.itemCount);
   if (count === null || count <= 0 || !Number.isInteger(count))
     errors["itemCount"] = MESSAGES.countPositive;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(clean(d.receivedDate)))
-    errors["receivedDate"] = MESSAGES.dateRequired;
+  if (!isValidISODate(clean(d.receivedDate))) errors["receivedDate"] = MESSAGES.dateRequired;
   const invoiceAmount = validateInvoice(d.invoiceAmount, errors);
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
@@ -81,6 +81,7 @@ export function validateService(
   if (!clean(d.customerName)) errors["customerName"] = MESSAGES.nameRequired;
   if (!clean(d.phoneNumber)) errors["phoneNumber"] = MESSAGES.phoneRequired;
   if (!clean(d.serviceDetails)) errors["serviceDetails"] = MESSAGES.detailsRequired;
+  if (!isValidISODate(clean(d.receivedDate))) errors["receivedDate"] = MESSAGES.dateRequired;
   const invoiceAmount = validateInvoice(d.invoiceAmount, errors);
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
@@ -91,6 +92,7 @@ export function validateService(
       customerName: clean(d.customerName),
       phoneNumber: clean(d.phoneNumber),
       serviceDetails: clean(d.serviceDetails),
+      receivedDate: clean(d.receivedDate),
       invoiceAmount,
     },
   };

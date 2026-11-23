@@ -1,6 +1,7 @@
-import { useMemo, type ReactNode } from "react";
-import { ChartColumn, Clock, HandCoins, PackageCheck, PackageOpen, Sigma } from "lucide-react";
-import { computeStats, type SectionStat } from "@/lib/laundry/stats";
+import { useMemo, useState, type ReactNode } from "react";
+import { ChartColumn, Clock, HandCoins, LayoutGrid, PackageCheck, PackageOpen, Sigma } from "lucide-react";
+import { computeStats, scopeStats, STATS_SCOPES, type ScopedStats, type SectionStat, type StatsScope } from "@/lib/laundry/stats";
+import { SECTION_LABELS } from "@/lib/laundry/sections";
 import { useLaundry } from "@/lib/laundry/store";
 import { formatNumber } from "@/lib/laundry/format";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,7 @@ const TONE_ICON: Record<Tone, string> = {
   brand: "bg-accent text-accent-foreground",
 };
 
-function Kpi({ icon, label, children, tone, hint }: { icon: ReactNode; label: string; children: ReactNode; tone: Tone; hint?: string }) {
+function Kpi({ icon, label, children, tone, hint }: { icon: ReactNode; label: string; children: ReactNode; tone: Tone; hint?: string | undefined }) {
   return (
     <div className="glass rounded-3xl p-4">
       <div className="flex items-center gap-2.5">
@@ -82,13 +83,47 @@ function SectionCard({ s }: { s: SectionStat }) {
   );
 }
 
+const UNIT_LABEL: Record<ScopedStats["unit"], string> = { mixed: "قطعة / طلب", piece: "قطعة", order: "طلب" };
+
+function ScopePicker({ value, onChange }: { value: StatsScope; onChange: (v: StatsScope) => void }) {
+  return (
+    <div role="radiogroup" aria-label="عرض الإحصائيات حسب القسم" className="glass mb-3 grid grid-cols-3 gap-1 rounded-2xl p-1">
+      {STATS_SCOPES.map((key) => {
+        const Icon = key === "all" ? LayoutGrid : SECTION_ICONS[key];
+        const active = value === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(key)}
+            className={cn(
+              "flex min-h-12 items-center justify-center gap-1.5 rounded-xl px-1.5 py-1.5 text-center text-xs font-extrabold leading-tight transition-all sm:text-sm",
+              active ? "bg-brand shadow-glow" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            )}
+          >
+            <Icon className="size-4 shrink-0" strokeWidth={2.4} />
+            <span className="text-balance">{key === "all" ? "جميع الأقسام" : SECTION_LABELS[key]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function StatsDashboard() {
   const state = useLaundry();
-  const stats = useMemo(() => computeStats(state.inventory, state.services), [state.inventory, state.services]);
+  const [scope, setScope] = useState<StatsScope>("all");
+  const all = useMemo(() => computeStats(state.inventory, state.services), [state.inventory, state.services]);
+  const stats = useMemo(() => scopeStats(all, scope), [all, scope]);
+  const unit = UNIT_LABEL[stats.unit];
+  const scopeName = scope === "all" ? "جميع الأقسام" : `قسم ${SECTION_LABELS[scope]}`;
 
   return (
     <section>
       <SectionHeader title="الإحصائيات" subtitle="أرقام لحظية محسوبة من السجلات الحالية" icon={<ChartColumn />} />
+      <ScopePicker value={scope} onChange={setScope} />
 
       {!state.ready ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -103,20 +138,20 @@ export function StatsDashboard() {
               <span className="grid size-10 place-items-center rounded-2xl bg-primary-foreground/20">
                 <Sigma className="size-5" />
               </span>
-              <p className="text-sm font-bold">إجمالي قيمة الفواتير الكلي</p>
+              <p className="text-sm font-bold">{scope === "all" ? "إجمالي قيمة الفواتير الكلي" : `إجمالي قيمة فواتير ${SECTION_LABELS[scope]}`}</p>
             </div>
             <p className="tnum mt-3 text-3xl font-extrabold">
               {formatNumber(stats.totalRevenue)} <span className="text-base font-bold opacity-80">ل.س</span>
             </p>
-            <p className="mt-1 text-xs font-semibold opacity-85">{formatNumber(stats.totalRecords)} سجل في جميع الأقسام</p>
+            <p className="mt-1 text-xs font-semibold opacity-85">{formatNumber(stats.totalRecords)} سجل في {scopeName}</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Kpi icon={<PackageOpen />} tone="pending" label="إجمالي البضاعة الموجودة (غير المُسلّمة)" hint="قطع السجاد والحرامات + طلبات الأقسام الأخرى">
-              <Count value={stats.pendingGoods} unit="قطعة / طلب" />
+            <Kpi icon={<PackageOpen />} tone="pending" label="إجمالي البضاعة الموجودة (غير المُسلّمة)" hint={scope === "all" ? "قطع السجاد والحرامات + طلبات الأقسام الأخرى" : undefined}>
+              <Count value={stats.pendingGoods} unit={unit} />
             </Kpi>
             <Kpi icon={<PackageCheck />} tone="success" label="إجمالي البضائع التي تم تسليمها">
-              <Count value={stats.deliveredGoods} unit="قطعة / طلب" />
+              <Count value={stats.deliveredGoods} unit={unit} />
             </Kpi>
             <Kpi icon={<HandCoins />} tone="success" label="كمية المال مقابل البضائع التي تم تسليمها">
               <Money value={stats.deliveredRevenue} />
@@ -126,7 +161,9 @@ export function StatsDashboard() {
             </Kpi>
           </div>
 
-          <h3 className="mb-3 mt-6 font-display text-lg font-extrabold text-foreground">تفصيل حسب الأقسام</h3>
+          <h3 className="mb-3 mt-6 font-display text-lg font-extrabold text-foreground">
+            {scope === "all" ? "تفصيل حسب الأقسام" : "تفاصيل القسم"}
+          </h3>
           <div className="grid gap-3 md:grid-cols-2">
             {stats.sections.map((s) => (
               <SectionCard key={s.key} s={s} />

@@ -35,3 +35,5 @@ use the editor.
 - Each of the 5 main sections is its own route file sharing the shell in `__root.tsx` (header + `MainNav`), so every view has its own URL and head metadata.
 - The store renders an empty `ready: false` snapshot during SSR; views show skeletons until the browser snapshot loads, avoiding hydration mismatches.
 - PWA is manifest-only (no service worker) until offline support is explicitly requested.
+- Stored and imported data both pass through the normalizers in `src/lib/laundry/backup.ts` (lenient on load, strict on JSON import) so older saved records gain new fields without losing data.
+- Phone link building (tel/wa.me, country-code normalization) lives in `src/lib/laundry/contact.ts`; `ContactActions` only renders its result.

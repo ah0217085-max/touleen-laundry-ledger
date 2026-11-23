@@ -49,6 +49,8 @@
   --color-pending: var(--pending);
   --color-pending-foreground: var(--pending-foreground);
   --color-pending-soft: var(--pending-soft);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-foreground: var(--whatsapp-foreground);
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
   --color-glass-border: var(--glass-border);
@@ -114,6 +116,10 @@
   --pending: oklch(0.6 0.15 40);
   --pending-foreground: oklch(0.4 0.12 30);
   --pending-soft: oklch(0.95 0.04 40);
+
+  /* WhatsApp action (deep green, white text ≥ 4.5:1) */
+  --whatsapp: oklch(0.5 0.13 155);
+  --whatsapp-foreground: oklch(0.99 0.006 350);
 
   /* Frosted glass */
   --glass: oklch(1 0 0 / 0.55);
