@@ -1,0 +1,89 @@
+{
+  "source": "bolt",
+  "capabilities": [
+    {
+      "capability": "code",
+      "source": "Vite + React 18 SPA (Tailwind v3)",
+      "outcome": "migrate",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "schema",
+      "source": "none (no database; @supabase/supabase-js installed but unused)",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "records",
+      "source": "browser localStorage key toleen-laundry-state-v1",
+      "outcome": "keep_local_storage",
+      "status": "accepted",
+      "next_action": "Records stay in each device browser per brief; old Bolt-URL browser data is origin-scoped and not transferable"
+    },
+    {
+      "capability": "auth",
+      "source": "none",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "authorization",
+      "source": "none",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "storage",
+      "source": "none",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "external_providers",
+      "source": "Google Fonts (Cairo/Tajawal)",
+      "outcome": "preserve",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "public_endpoints_webhooks_schedules",
+      "source": "none",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "secrets",
+      "source": "none detected",
+      "outcome": "not_applicable",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "pwa_manifest",
+      "source": "public/manifest.webmanifest + icon.svg (no service worker)",
+      "outcome": "migrate",
+      "status": "verified",
+      "next_action": "none"
+    },
+    {
+      "capability": "cutover",
+      "source": "Bolt hosted URL",
+      "outcome": "publish_on_lovable",
+      "status": "pending",
+      "next_action": "User publishes"
+    },
+    {
+      "capability": "verification",
+      "source": "-",
+      "outcome": "verify",
+      "status": "verified",
+      "next_action": "none"
+    }
+  ]
+}

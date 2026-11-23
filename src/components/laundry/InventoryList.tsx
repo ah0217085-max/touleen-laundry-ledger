@@ -1,0 +1,106 @@
+import type { InventoryRecord } from "@/lib/laundry/types";
+import { formatDate, formatNumber } from "@/lib/laundry/format";
+import { laundry } from "@/lib/laundry/store";
+import { DeliveryToggle } from "./DeliveryToggle";
+import { RowActions } from "./RowActions";
+import { Money } from "./Money";
+
+interface Props {
+  records: InventoryRecord[];
+  countLabel: string;
+  onEdit: (r: InventoryRecord) => void;
+  onDelete: (r: InventoryRecord) => void;
+}
+
+const th = "px-4 py-3 text-start text-xs font-extrabold text-muted-foreground whitespace-nowrap";
+const td = "px-4 py-3 whitespace-nowrap";
+
+export function InventoryList({ records, countLabel, onEdit, onDelete }: Props) {
+  return (
+    <>
+      {/* Phones: stacked cards */}
+      <ul className="grid gap-3 md:hidden">
+        {records.map((r) => (
+          <li key={r.id} className="glass rounded-3xl p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-extrabold text-foreground">{r.customerName}</h3>
+                <p className="tnum mt-0.5 text-sm font-semibold text-muted-foreground" dir="ltr">
+                  {r.customerNumber}
+                </p>
+              </div>
+              <DeliveryToggle
+                isDelivered={r.isDelivered}
+                customerName={r.customerName}
+                onToggle={() => laundry.toggleInventory(r.id)}
+              />
+            </div>
+            <dl className="mt-3 grid grid-cols-3 gap-2 rounded-2xl bg-glass-strong p-3 text-sm">
+              <div>
+                <dt className="text-xs font-semibold text-muted-foreground">{countLabel}</dt>
+                <dd className="tnum mt-0.5 font-extrabold text-foreground">{formatNumber(r.itemCount)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-muted-foreground">تاريخ الاستلام</dt>
+                <dd className="mt-0.5 font-bold text-foreground">{formatDate(r.receivedDate)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-muted-foreground">الفاتورة</dt>
+                <dd className="mt-0.5">
+                  <Money value={r.invoiceAmount} />
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-2 flex justify-end">
+              <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Tablets and up: table */}
+      <div className="glass hidden overflow-x-auto rounded-3xl md:block">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-glass-strong">
+            <tr>
+              <th className={th}>اسم الزبون</th>
+              <th className={th}>{countLabel}</th>
+              <th className={th}>رقم الزبون</th>
+              <th className={th}>تاريخ الاستلام</th>
+              <th className={th}>الفاتورة المطلوبة</th>
+              <th className={th}>حالة التسليم</th>
+              <th className={th}>
+                <span className="sr-only">إجراءات</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {records.map((r) => (
+              <tr key={r.id} className="border-t border-glass-border transition hover:bg-glass-strong/60">
+                <td className={`${td} font-extrabold text-foreground`}>{r.customerName}</td>
+                <td className={`${td} tnum font-bold`}>{formatNumber(r.itemCount)}</td>
+                <td className={`${td} tnum font-semibold text-muted-foreground`} dir="ltr">
+                  {r.customerNumber}
+                </td>
+                <td className={`${td} font-semibold`}>{formatDate(r.receivedDate)}</td>
+                <td className={td}>
+                  <Money value={r.invoiceAmount} />
+                </td>
+                <td className={td}>
+                  <DeliveryToggle
+                    isDelivered={r.isDelivered}
+                    customerName={r.customerName}
+                    onToggle={() => laundry.toggleInventory(r.id)}
+                  />
+                </td>
+                <td className={`${td} w-0`}>
+                  <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}

@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- App data lives in one module store (`src/lib/laundry/store.ts`) persisted to localStorage via a swappable `persistence` object; UI reads it only through `useLaundry()` so a remote backend can replace storage without UI changes.
+- Business rules (validation, delivery toggle, filters, stats) are pure functions in `src/lib/laundry/` with tests in `laundry.test.ts`; keep UI components free of rule logic.
+- Each of the 5 main sections is its own route file sharing the shell in `__root.tsx` (header + `MainNav`), so every view has its own URL and head metadata.
+- The store renders an empty `ready: false` snapshot during SSR; views show skeletons until the browser snapshot loads, avoiding hydration mismatches.
+- PWA is manifest-only (no service worker) until offline support is explicitly requested.

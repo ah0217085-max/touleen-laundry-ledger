@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FourthRouteImport } from './routes/fourth'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as TailoringRouteImport } from './routes/tailoring'
+import { Route as WashingRouteImport } from './routes/washing'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FourthRoute = FourthRouteImport.update({
+  id: '/fourth',
+  path: '/fourth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TailoringRoute = TailoringRouteImport.update({
+  id: '/tailoring',
+  path: '/tailoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WashingRoute = WashingRouteImport.update({
+  id: '/washing',
+  path: '/washing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/fourth': typeof FourthRoute
+  '/stats': typeof StatsRoute
+  '/tailoring': typeof TailoringRoute
+  '/washing': typeof WashingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/fourth': typeof FourthRoute
+  '/stats': typeof StatsRoute
+  '/tailoring': typeof TailoringRoute
+  '/washing': typeof WashingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/fourth': typeof FourthRoute
+  '/stats': typeof StatsRoute
+  '/tailoring': typeof TailoringRoute
+  '/washing': typeof WashingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/fourth' | '/stats' | '/tailoring' | '/washing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/fourth' | '/stats' | '/tailoring' | '/washing'
+  id: '__root__' | '/' | '/fourth' | '/stats' | '/tailoring' | '/washing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FourthRoute: typeof FourthRoute
+  StatsRoute: typeof StatsRoute
+  TailoringRoute: typeof TailoringRoute
+  WashingRoute: typeof WashingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fourth': {
+      id: '/fourth'
+      path: '/fourth'
+      fullPath: '/fourth'
+      preLoaderRoute: typeof FourthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tailoring': {
+      id: '/tailoring'
+      path: '/tailoring'
+      fullPath: '/tailoring'
+      preLoaderRoute: typeof TailoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/washing': {
+      id: '/washing'
+      path: '/washing'
+      fullPath: '/washing'
+      preLoaderRoute: typeof WashingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FourthRoute: FourthRoute,
+  StatsRoute: StatsRoute,
+  TailoringRoute: TailoringRoute,
+  WashingRoute: WashingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
