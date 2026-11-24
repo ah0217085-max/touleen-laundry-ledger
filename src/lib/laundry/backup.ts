@@ -114,6 +114,40 @@ export function normalizeState(raw: unknown): NormalizedState {
   };
 }
 
+export const EMPTY_STATE: PersistedState = { inventory: [], services: [], fourthLabel: "" };
+
+export interface StoredRead {
+  state: PersistedState;
+  /** True when the saved text must be kept aside before it is overwritten (unreadable, newer, or partly broken). */
+  preserveRaw: boolean;
+}
+
+/** Reads what the app saved on this device. Nothing saved yet means an empty app, never demo data. */
+export function readStored(raw: string | null): StoredRead {
+  if (raw === null || raw.trim() === "") return { state: { ...EMPTY_STATE }, preserveRaw: false };
+  let data: unknown;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return { state: { ...EMPTY_STATE }, preserveRaw: true };
+  }
+  if (!isObj(data)) return { state: { ...EMPTY_STATE }, preserveRaw: true };
+  const version = num(data["version"]);
+  const { state, invalid } = normalizeState(data);
+  return { state, preserveRaw: invalid > 0 || (version !== null && version > BACKUP_VERSION) };
+}
+
+/** What gets written to the device after every change: versioned, fixed key order. */
+export function serializeStored(state: PersistedState): string {
+  return JSON.stringify({
+    app: BACKUP_APP,
+    version: BACKUP_VERSION,
+    fourthLabel: state.fourthLabel,
+    inventory: state.inventory,
+    services: state.services,
+  });
+}
+
 /** Newest first, ties broken by id, so the same data always produces the same file. */
 function byNewest<T extends { createdAt: string; id: string }>(a: T, b: T): number {
   if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? 1 : -1;

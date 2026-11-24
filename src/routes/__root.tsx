@@ -9,6 +9,7 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useRouterState } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
@@ -17,6 +18,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { WaveBackground } from "@/components/laundry/WaveBackground";
 import { AppHeader } from "@/components/laundry/AppHeader";
 import { MainNav } from "@/components/laundry/MainNav";
+import { onSaveError } from "@/lib/laundry/store";
+import { requestPersistentStorage, setupOfflineSupport } from "@/lib/pwa/register";
 
 function NotFoundComponent() {
   return (
@@ -87,8 +90,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "مصبغة تولين" },
       { name: "description", content: "مصبغة تولين — إدارة السجاد والحرامات والتصليح والخياطة والغسيل والإحصائيات" },
       { name: "theme-color", content: "#C2185B" },
+      { name: "application-name", content: "مصبغة تولين" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "مصبغة تولين" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "format-detection", content: "telephone=no" },
       { property: "og:title", content: "مصبغة تولين" },
       { property: "og:description", content: "إدارة طلبات مصبغة تولين وحالة تسليمها" },
       { property: "og:type", content: "website" },
@@ -103,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
@@ -131,10 +138,21 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  useEffect(() => {
+    void setupOfflineSupport();
+    void requestPersistentStorage();
+    return onSaveError(() =>
+      toast.error("تعذّر حفظ التغيير على هذا الجهاز", {
+        id: "save-error",
+        description: "قد تكون ذاكرة المتصفح ممتلئة. نزّل نسخة احتياطية الآن حتى لا تضيع السجلات.",
+      }),
+    );
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <WaveBackground />
-      <div className="relative mx-auto min-h-dvh w-full max-w-5xl px-3 pb-32 sm:px-5 md:pb-12">
+      <div className="relative mx-auto min-h-dvh w-full max-w-5xl px-3 pt-[env(safe-area-inset-top)] pb-32 sm:px-5 md:pb-12">
         <AppHeader />
         <MainNav />
         <main

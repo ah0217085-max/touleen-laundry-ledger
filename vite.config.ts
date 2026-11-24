@@ -8,6 +8,29 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import type { Plugin } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
+
+// Build output for browser files; the offline helper must be written next to them, and only once.
+const CLIENT_OUT = "dist/client";
+// Icons and the manifest are copied after the client bundle, so list them for offline storage by hand.
+const PUBLIC_SHELL = [
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/favicon.png",
+];
+const publicEntry = (url: string) => ({
+  url,
+  revision: createHash("md5")
+    .update(readFileSync(`public${url}`))
+    .digest("hex"),
+});
+const clientOnly = (plugins: Plugin[]): Plugin[] =>
+  plugins.map((p) => ({ ...p, applyToEnvironment: (env) => env.name === "client" }));
 
 export default defineConfig({
   tanstackStart: {
@@ -15,4 +38,52 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  plugins: [
+    // Offline shell for the installed app. Registered only by src/lib/pwa/register.ts (never in dev/preview).
+    ...clientOnly(
+      VitePWA({
+        outDir: CLIENT_OUT,
+        strategies: "generateSW",
+        filename: "sw.js",
+        registerType: "autoUpdate",
+        injectRegister: null,
+        manifest: false, // public/manifest.webmanifest is the single manifest
+        devOptions: { enabled: false },
+        workbox: {
+          globDirectory: CLIENT_OUT,
+          globPatterns: ["**/*.{js,css,png,svg,ico,webmanifest,woff2}"],
+          additionalManifestEntries: PUBLIC_SHELL.map(publicEntry),
+          navigateFallback: null,
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
+          runtimeCaching: [
+            {
+              // Pages: always try the network first, fall back to the last copy when offline.
+              urlPattern: ({ request, url }) =>
+                request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "toleen-pages",
+                networkTimeoutSeconds: 4,
+                cacheableResponse: { statuses: [200] },
+                expiration: { maxEntries: 20 },
+              },
+            },
+            {
+              urlPattern: ({ url }) =>
+                url.origin === "https://fonts.googleapis.com" ||
+                url.origin === "https://fonts.gstatic.com",
+              handler: "StaleWhileRevalidate",
+              options: {
+                cacheName: "toleen-fonts",
+                cacheableResponse: { statuses: [0, 200] },
+                expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              },
+            },
+          ],
+        },
+      }),
+    ),
+  ],
 });

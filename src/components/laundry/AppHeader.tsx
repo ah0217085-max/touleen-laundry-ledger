@@ -1,18 +1,15 @@
 import { useMemo, useState } from "react";
-import { DatabaseBackup, RotateCcw, Search, X } from "lucide-react";
-import { toast } from "sonner";
+import { DatabaseBackup, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "./BrandLogo";
-import { ConfirmDialog } from "./ConfirmDialog";
 import { BackupDialog } from "./BackupDialog";
-import { laundry, setSearchQuery, useLaundry, useSearchQuery } from "@/lib/laundry/store";
+import { setSearchQuery, useLaundry, useSearchQuery } from "@/lib/laundry/store";
 import { filterInventory, filterServices } from "@/lib/laundry/records";
 import { formatNumber } from "@/lib/laundry/format";
 
 export function AppHeader() {
   const query = useSearchQuery();
   const state = useLaundry();
-  const [restoreOpen, setRestoreOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
 
   const matches = useMemo(() => {
@@ -37,21 +34,13 @@ export function AppHeader() {
         </div>
         <Button
           variant="glass"
-          size="icon-sm"
+          size="sm"
           onClick={() => setBackupOpen(true)}
-          aria-label="النسخ الاحتياطي"
           title="النسخ الاحتياطي"
+          className="h-auto shrink-0 flex-col gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-extrabold leading-none"
         >
-          <DatabaseBackup />
-        </Button>
-        <Button
-          variant="glass"
-          size="icon-sm"
-          onClick={() => setRestoreOpen(true)}
-          aria-label="استعادة البيانات التجريبية"
-          title="استعادة البيانات التجريبية"
-        >
-          <RotateCcw />
+          <DatabaseBackup className="size-4.5" />
+          نسخ احتياطي
         </Button>
       </div>
 
@@ -83,18 +72,6 @@ export function AppHeader() {
       </div>
 
       <BackupDialog open={backupOpen} onOpenChange={setBackupOpen} />
-      <ConfirmDialog
-        open={restoreOpen}
-        onOpenChange={setRestoreOpen}
-        title="استعادة البيانات التجريبية"
-        message="سيتم استبدال جميع السجلات الحالية بالبيانات التجريبية. لا يمكن التراجع عن ذلك."
-        confirmLabel="استعادة"
-        onConfirm={() => {
-          laundry.restoreSeed();
-          setRestoreOpen(false);
-          toast.success("تمت استعادة البيانات التجريبية");
-        }}
-      />
     </header>
   );
 }

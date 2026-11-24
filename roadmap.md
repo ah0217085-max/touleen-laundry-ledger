@@ -10,4 +10,7 @@
 - [x] Auto receipt date on all records + delivery timestamp display
 - [x] JSON backup download & validated restore
 - [x] Statistics section filter (all / each section)
+- [x] Pink home-screen icon with «تولين», manifest name «مصبغة تولين», standalone launch
+- [x] Offline opening for the installed app (published app only)
+- [x] No demo data on first launch; versioned saves; one-step removal of old sample customers
 - [ ] Confirm WhatsApp country code (+963 assumed) — waiting on user

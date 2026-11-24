@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { AlertCircle, CheckCircle2, DatabaseBackup, Download, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, DatabaseBackup, Download, Eraser, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { backupFileName, buildBackup, parseBackup } from "@/lib/laundry/backup";
 import { formatNumber, nowISO } from "@/lib/laundry/format";
 import type { PersistedState } from "@/lib/laundry/types";
 import { laundry, useLaundry } from "@/lib/laundry/store";
+import { countSampleRecords } from "@/lib/laundry/seed";
 import { GlassDialog } from "./GlassDialog";
 
 type Status = { tone: "ok" | "error"; text: string } | null;
@@ -22,15 +23,25 @@ export function BackupDialog({ open, onOpenChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(null);
   const [pending, setPending] = useState<Pending>(null);
+  const [confirmSamples, setConfirmSamples] = useState(false);
 
   useEffect(() => {
     if (open) {
       setStatus(null);
       setPending(null);
+      setConfirmSamples(false);
     }
   }, [open]);
 
   const total = state.inventory.length + state.services.length;
+  const samples = countSampleRecords(state);
+
+  const removeSamples = () => {
+    laundry.removeSamples();
+    setConfirmSamples(false);
+    setStatus({ tone: "ok", text: `تم حذف ${formatNumber(samples)} سجل تجريبي. سجلاتك الحقيقية لم تتغير.` });
+    toast.success("تم حذف البيانات التجريبية");
+  };
 
   const exportBackup = () => {
     try {
@@ -133,6 +144,29 @@ export function BackupDialog({ open, onOpenChange }: Props) {
                 استعادة الآن
               </Button>
             </div>
+          </div>
+        )}
+
+        {state.ready && samples > 0 && (
+          <div className="rounded-2xl border border-dashed border-glass-border bg-glass p-3 text-sm">
+            <p className="font-semibold leading-relaxed text-foreground">
+              يوجد {formatNumber(samples)} سجل تجريبي (زبائن أمثلة مثل «أحمد المصري»). يمكنك حذفها وإبقاء سجلاتك الحقيقية.
+            </p>
+            {confirmSamples ? (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => setConfirmSamples(false)}>
+                  إلغاء
+                </Button>
+                <Button variant="destructive" onClick={removeSamples}>
+                  تأكيد الحذف
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" className="mt-2 w-full" onClick={() => setConfirmSamples(true)}>
+                <Eraser />
+                حذف البيانات التجريبية
+              </Button>
+            )}
           </div>
         )}
 

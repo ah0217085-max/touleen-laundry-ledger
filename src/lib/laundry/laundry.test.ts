@@ -5,7 +5,8 @@ import { toggleDelivery, filterServices } from "./records";
 import type { InventoryRecord, ServiceRecord } from "./types";
 import { scopeStats } from "./stats";
 import { contactLinks } from "./contact";
-import { buildBackup, parseBackup, normalizeState, BACKUP_ERRORS } from "./backup";
+import { buildBackup, parseBackup, normalizeState, BACKUP_ERRORS, readStored, serializeStored } from "./backup";
+import { countSampleRecords, removeSampleRecords } from "./seed";
 import { SECTION_LABELS, SERVICE_DETAILS_LABELS } from "./sections";
 
 const invDraft = {
@@ -199,5 +200,60 @@ describe("statistics section filter", () => {
   });
   it("combines every section for الكل", () => {
     expect(scopeStats(all, "all").totalRevenue).toBe(45000 + 36000 + 6000 + 18000);
+  });
+});
+
+describe("saved data on the device", () => {
+  it("starts empty on first launch instead of adding demo customers", () => {
+    const r = readStored(null);
+    expect(r.state.inventory).toHaveLength(0);
+    expect(r.state.services).toHaveLength(0);
+    expect(r.preserveRaw).toBe(false);
+  });
+
+  it("keeps a copy of unreadable saved data rather than silently replacing it", () => {
+    expect(readStored("{broken").preserveRaw).toBe(true);
+  });
+
+  it("keeps a copy when the saved data comes from a newer app version", () => {
+    expect(readStored(JSON.stringify({ version: 99, inventory: [], services: [] })).preserveRaw).toBe(true);
+  });
+
+  it("reads back exactly what it saved, including receipt and delivery times", () => {
+    const state = {
+      inventory: [inv({ id: "a", createdAt: "2026-11-20T08:00:00.000Z", updatedAt: "2026-11-21T08:00:00.000Z", isDelivered: true, deliveredAt: "2026-11-21T08:00:00.000Z" })],
+      services: [svc({ id: "b", createdAt: "2026-11-22T08:00:00.000Z", updatedAt: "2026-11-22T08:00:00.000Z", receivedDate: "2026-11-19" })],
+      fourthLabel: "",
+    };
+    const r = readStored(serializeStored(state));
+    expect(r.preserveRaw).toBe(false);
+    expect(r.state).toEqual(state);
+  });
+
+  it("reads data saved by the earlier version without a version number", () => {
+    const old = { inventory: [inv({ id: "a", createdAt: "2026-11-20T08:00:00.000Z" })], services: [], fourthLabel: "" };
+    const r = readStored(JSON.stringify(old));
+    expect(r.state.inventory).toHaveLength(1);
+    expect(r.preserveRaw).toBe(false);
+  });
+});
+
+describe("removing demo customers", () => {
+  it("removes only untouched demo records and keeps real ones", () => {
+    const state = {
+      inventory: [
+        inv({ id: "demo", customerName: "أحمد المصري", customerNumber: "0935123456" }),
+        inv({ id: "real", customerName: "زبون حقيقي", customerNumber: "0935123456" }),
+      ],
+      services: [
+        svc({ id: "demo2", sectionKey: "fourth", customerName: "رامي منصور", phoneNumber: "0933445566", serviceDetails: "كيّ وترتيب ملابس موسمية" }),
+        svc({ id: "edited", sectionKey: "fourth", customerName: "رامي منصور", phoneNumber: "0933445566", serviceDetails: "كيّ بدلة" }),
+      ],
+      fourthLabel: "",
+    };
+    expect(countSampleRecords(state)).toBe(2);
+    const next = removeSampleRecords(state);
+    expect(next.inventory.map((r) => r.id)).toEqual(["real"]);
+    expect(next.services.map((r) => r.id)).toEqual(["edited"]);
   });
 });
