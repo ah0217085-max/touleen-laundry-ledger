@@ -38,3 +38,5 @@ use the editor.
 - First launch starts with no records (demo data is never injected); saved data is a versioned envelope read via `readStored`, and unreadable/newer data is copied aside before it can be overwritten.
 - Stored and imported data both pass through the normalizers in `src/lib/laundry/backup.ts` (lenient on load, strict on JSON import) so older saved records gain new fields without losing data.
 - Phone link building (tel/wa.me, country-code normalization) lives in `src/lib/laundry/contact.ts`; `ContactActions` only renders its result.
+- Security lives in `src/lib/security/`: a single atomic vault contains the PIN verifier and encrypted payload; serialized asynchronous saves prevent stale writes, while the laundry store remains the UI's only data source.
+- The root PIN gate unmounts all record views while locked; keys and decrypted records live only in memory, and recovered legacy fragments are retained inside ciphertext before plaintext migration sources are removed.

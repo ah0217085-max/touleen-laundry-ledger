@@ -14,3 +14,5 @@
 - [x] Offline opening for the installed app (published app only)
 - [x] No demo data on first launch; versioned saves; one-step removal of old sample customers
 - [ ] Confirm WhatsApp country code (+963 assumed) — waiting on user
+- [ ] Finish local PIN gate, encrypted migration/storage, PIN changes and encrypted backups
+- [ ] Test security rules and verify mobile migration/lock/change/restore flows

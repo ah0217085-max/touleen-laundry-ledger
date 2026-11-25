@@ -10,50 +10,21 @@ import type {
 import { nowISO, uid } from "./format";
 import { removeSampleRecords } from "./seed";
 import { toggleDelivery } from "./records";
-import { readStored, serializeStored } from "./backup";
+import { onSecurityDataChange, saveSecurityRecords, securityRecords } from "../security/session";
 
 /**
  * Single source of truth. Persists to localStorage today; swap `persistence`
  * for a remote backend later without touching any UI component.
  */
-const STORAGE_KEY = "toleen-laundry-state-v1";
-
 interface Persistence {
-  load(): PersistedState;
+  load(): PersistedState | null;
   /** Returns false when the device refused to save (storage full or blocked). */
-  save(state: PersistedState): boolean;
+  save(state: PersistedState): Promise<boolean>;
 }
 
 const persistence: Persistence = {
-  load() {
-    let raw: string | null = null;
-    try {
-      raw = window.localStorage.getItem(STORAGE_KEY);
-    } catch {
-      return readStored(null).state;
-    }
-    // Lenient: fills in fields added later (e.g. receipt date on older orders) and skips broken rows.
-    const { state, preserveRaw } = readStored(raw);
-    if (preserveRaw && raw) {
-      // Keep an untouched copy before anything overwrites it, so no saved record is ever lost.
-      try {
-        const key = `${STORAGE_KEY}-recovered`;
-        const prev = window.localStorage.getItem(key);
-        if (prev !== raw) window.localStorage.setItem(prev === null ? key : `${key}-${Date.now()}`, raw);
-      } catch {
-        /* storage full */
-      }
-    }
-    return state;
-  },
-  save(state) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, serializeStored(state));
-      return true;
-    } catch {
-      return false;
-    }
-  },
+  load: securityRecords,
+  save: saveSecurityRecords,
 };
 
 const SERVER_STATE: LaundryState = { inventory: [], services: [], fourthLabel: "", ready: false };
@@ -72,31 +43,33 @@ export function onSaveError(listener: () => void) {
 
 function init(): LaundryState {
   if (current) return current;
-  current = { ...persistence.load(), ready: true };
+  const loaded = persistence.load();
+  if (!loaded) return SERVER_STATE;
+  current = { ...loaded, ready: true };
   return current;
 }
 
 function setState(update: (s: PersistedState) => PersistedState) {
   const prev = init();
+  if (!prev.ready) return;
   const next = update(prev);
   current = { inventory: next.inventory, services: next.services, fourthLabel: next.fourthLabel, ready: true };
-  const saved = persistence.save({ inventory: current.inventory, services: current.services, fourthLabel: current.fourthLabel });
+  void persistence.save({ inventory: current.inventory, services: current.services, fourthLabel: current.fourthLabel }).then((saved) => {
+    if (!saved) saveErrorListeners.forEach((l) => l());
+  });
   listeners.forEach((l) => l());
-  if (!saved) saveErrorListeners.forEach((l) => l());
 }
 
-function onStorage(e: StorageEvent) {
-  if (e.key !== STORAGE_KEY) return;
+onSecurityDataChange(() => {
   current = null;
+  setSearchQuery("");
   listeners.forEach((l) => l());
-}
+});
 
 function subscribe(listener: () => void) {
-  if (listeners.size === 0) window.addEventListener("storage", onStorage);
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
   };
 }
 

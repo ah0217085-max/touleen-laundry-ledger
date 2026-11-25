@@ -18,6 +18,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { WaveBackground } from "@/components/laundry/WaveBackground";
 import { AppHeader } from "@/components/laundry/AppHeader";
 import { MainNav } from "@/components/laundry/MainNav";
+import { PinGate } from "@/components/laundry/PinGate";
 import { onSaveError } from "@/lib/laundry/store";
 import { requestPersistentStorage, setupOfflineSupport } from "@/lib/pwa/register";
 
@@ -152,6 +153,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <WaveBackground />
+      <PinGate>
       <div className="relative mx-auto min-h-dvh w-full max-w-5xl px-3 pt-[env(safe-area-inset-top)] pb-32 sm:px-5 md:pb-12">
         <AppHeader />
         <MainNav />
@@ -163,6 +165,7 @@ function RootComponent() {
           <Outlet />
         </main>
       </div>
+      </PinGate>
       <Toaster />
     </QueryClientProvider>
   );
