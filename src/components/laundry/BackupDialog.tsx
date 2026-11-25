@@ -42,7 +42,12 @@ export function BackupDialog({ open, onOpenChange }: Props) {
   };
   useEffect(() => {
     if (!open) endPicker();
-    return () => endPicker();
+    const input = fileRef.current;
+    input?.addEventListener("cancel", endPicker);
+    return () => {
+      input?.removeEventListener("cancel", endPicker);
+      endPicker();
+    };
   }, [open]);
   useEffect(() => {
     if (!fileText && !pending && !busy) return;
@@ -177,7 +182,6 @@ export function BackupDialog({ open, onOpenChange }: Props) {
           accept="application/json,.json"
           className="hidden"
           onChange={onFile}
-          onCancel={endPicker}
           aria-label="اختيار ملف النسخة الاحتياطية"
         />
 
