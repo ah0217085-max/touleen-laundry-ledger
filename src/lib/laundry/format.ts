@@ -31,15 +31,25 @@ export function isValidTimestamp(s: unknown): s is string {
   return typeof s === "string" && s.length > 0 && !Number.isNaN(new Date(s).getTime());
 }
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
-  const d = new Date(dateStr + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" });
+  if (isValidISODate(dateStr)) {
+    const d = new Date(dateStr + "T00:00:00");
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" });
+    }
+  }
+  if (isValidTimestamp(dateStr)) {
+    const d = new Date(dateStr);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" });
+    }
+  }
+  return "—";
 }
 
-/** Date + time for timestamps such as deliveredAt. */
-export function formatDateTime(iso: string | null): string {
+/** Date + time for timestamps such as receivedAt and deliveredAt. */
+export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
@@ -49,11 +59,22 @@ export function formatDateTime(iso: string | null): string {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
-export function formatNumber(value: number): string {
-  const safe = Number.isFinite(value) ? value : 0;
+/** Displays exact intake date & time when available, falling back to date-only for older records. */
+export function formatIntakeDateTime(
+  receivedAt: string | null | undefined,
+  receivedDate: string | null | undefined,
+): string {
+  if (receivedAt && isValidISODate(receivedAt)) return formatDate(receivedAt);
+  if (isValidTimestamp(receivedAt)) return formatDateTime(receivedAt);
+  return formatDate(receivedDate);
+}
+
+export function formatNumber(value: number | null | undefined): string {
+  const safe = typeof value === "number" && Number.isFinite(value) ? value : 0;
   return safe.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
 }
 
@@ -61,4 +82,11 @@ export const CURRENCY = "ل.س";
 
 export function clean(s: unknown): string {
   return s == null ? "" : String(s).trim();
+}
+
+/** Converts Arabic-Indic (٠-٩) and Persian (۰-۹) digits to Latin digits. */
+export function toLatinDigits(s: string): string {
+  return s
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
 }

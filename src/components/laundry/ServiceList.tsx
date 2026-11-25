@@ -1,5 +1,5 @@
 import type { ServiceRecord } from "@/lib/laundry/types";
-import { formatDate } from "@/lib/laundry/format";
+import { formatIntakeDateTime } from "@/lib/laundry/format";
 import { laundry } from "@/lib/laundry/store";
 import { DeliveryToggle } from "./DeliveryToggle";
 import { RowActions } from "./RowActions";
@@ -24,7 +24,9 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
         {records.map((r) => (
           <li key={r.id} className="glass rounded-3xl p-4">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="min-w-0 truncate pt-2 text-base font-extrabold text-foreground">{r.customerName}</h3>
+              <h3 className="min-w-0 truncate pt-2 text-base font-extrabold text-foreground">
+                {r.customerName}
+              </h3>
               <DeliveryToggle
                 isDelivered={r.isDelivered}
                 customerName={r.customerName}
@@ -34,13 +36,17 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
             <ContactActions phone={r.phoneNumber} customerName={r.customerName} className="mt-2" />
             <div className="mt-3 rounded-2xl bg-glass-strong p-3">
               <p className="text-xs font-semibold text-muted-foreground">{detailsLabel}</p>
-              <p className="mt-0.5 text-sm font-bold leading-relaxed text-foreground">{r.serviceDetails}</p>
-              <dl className="mt-2 grid grid-cols-2 gap-2 border-t border-glass-border pt-2 text-sm">
-                <div>
+              <p className="mt-0.5 break-words text-sm font-bold leading-relaxed text-foreground">
+                {r.serviceDetails}
+              </p>
+              <dl className="mt-2 grid grid-cols-1 gap-2 border-t border-glass-border pt-2 text-sm sm:grid-cols-2">
+                <div className="min-w-0">
                   <dt className="text-xs font-semibold text-muted-foreground">تاريخ الاستلام</dt>
-                  <dd className="mt-0.5 font-bold text-foreground">{formatDate(r.receivedDate)}</dd>
+                  <dd className="mt-0.5 text-xs font-bold text-foreground">
+                    {formatIntakeDateTime(r.receivedAt, r.receivedDate)}
+                  </dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="text-xs font-semibold text-muted-foreground">تاريخ التسليم</dt>
                   <dd className="mt-0.5 text-xs">
                     <DeliveredStamp isDelivered={r.isDelivered} deliveredAt={r.deliveredAt} />
@@ -48,10 +54,10 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
                 </div>
               </dl>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm">
                 <span className="font-semibold text-muted-foreground">الفاتورة: </span>
-                <Money value={r.invoiceAmount} />
+                <Money value={r.invoiceAmount} showUnset />
               </p>
               <RowActions onEdit={() => onEdit(r)} onDelete={() => onDelete(r)} />
             </div>
@@ -76,15 +82,29 @@ export function ServiceList({ records, detailsLabel, onEdit, onDelete }: Props) 
           </thead>
           <tbody>
             {records.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border transition hover:bg-glass-strong/60">
-                <td className={`${td} whitespace-nowrap font-extrabold text-foreground`}>{r.customerName}</td>
-                <td className={`${td} whitespace-nowrap`}>
-                  <ContactActions phone={r.phoneNumber} customerName={r.customerName} className="flex-nowrap" compact />
+              <tr
+                key={r.id}
+                className="border-t border-glass-border transition hover:bg-glass-strong/60"
+              >
+                <td className={`${td} whitespace-nowrap font-extrabold text-foreground`}>
+                  {r.customerName}
                 </td>
-                <td className={`${td} min-w-40 font-semibold leading-relaxed`}>{r.serviceDetails}</td>
-                <td className={`${td} whitespace-nowrap font-semibold`}>{formatDate(r.receivedDate)}</td>
                 <td className={`${td} whitespace-nowrap`}>
-                  <Money value={r.invoiceAmount} />
+                  <ContactActions
+                    phone={r.phoneNumber}
+                    customerName={r.customerName}
+                    className="flex-nowrap"
+                    compact
+                  />
+                </td>
+                <td className={`${td} min-w-40 font-semibold leading-relaxed`}>
+                  {r.serviceDetails}
+                </td>
+                <td className={`${td} whitespace-nowrap text-xs font-semibold`}>
+                  {formatIntakeDateTime(r.receivedAt, r.receivedDate)}
+                </td>
+                <td className={`${td} whitespace-nowrap`}>
+                  <Money value={r.invoiceAmount} showUnset />
                 </td>
                 <td className={`${td} whitespace-nowrap`}>
                   <DeliveryToggle

@@ -7,7 +7,7 @@ import type {
   ServiceInput,
   ServiceRecord,
 } from "./types";
-import { nowISO, uid } from "./format";
+import { nowISO, toISODate, uid } from "./format";
 import { removeSampleRecords } from "./seed";
 import { toggleDelivery } from "./records";
 import { onSecurityDataChange, saveSecurityRecords, securityRecords } from "../security/session";
@@ -53,10 +53,21 @@ function setState(update: (s: PersistedState) => PersistedState) {
   const prev = init();
   if (!prev.ready) return;
   const next = update(prev);
-  current = { inventory: next.inventory, services: next.services, fourthLabel: next.fourthLabel, ready: true };
-  void persistence.save({ inventory: current.inventory, services: current.services, fourthLabel: current.fourthLabel }).then((saved) => {
-    if (!saved) saveErrorListeners.forEach((l) => l());
-  });
+  current = {
+    inventory: next.inventory,
+    services: next.services,
+    fourthLabel: next.fourthLabel,
+    ready: true,
+  };
+  void persistence
+    .save({
+      inventory: current.inventory,
+      services: current.services,
+      fourthLabel: current.fourthLabel,
+    })
+    .then((saved) => {
+      if (!saved) saveErrorListeners.forEach((l) => l());
+    });
   listeners.forEach((l) => l());
 }
 
@@ -80,13 +91,35 @@ export function useLaundry(): LaundryState {
 export const laundry = {
   addInventory(input: InventoryInput) {
     const ts = nowISO();
-    const rec: InventoryRecord = { ...input, id: uid(), isDelivered: false, deliveredAt: null, createdAt: ts, updatedAt: ts };
+    const today = toISODate(new Date(ts));
+    const receivedDate = input.receivedDate || today;
+    const receivedAt = input.receivedAt ?? (receivedDate === today ? ts : null);
+    const rec: InventoryRecord = {
+      ...input,
+      receivedDate,
+      ...(receivedAt ? { receivedAt } : {}),
+      id: uid(),
+      isDelivered: false,
+      deliveredAt: null,
+      createdAt: ts,
+      updatedAt: ts,
+    };
     setState((s) => ({ ...s, inventory: [rec, ...s.inventory] }));
   },
   updateInventory(id: string, input: InventoryInput) {
     setState((s) => ({
       ...s,
-      inventory: s.inventory.map((r) => (r.id === id ? { ...r, ...input, updatedAt: nowISO() } : r)),
+      inventory: s.inventory.map((r) => {
+        if (r.id !== id) return r;
+        const dateChanged = input.receivedDate !== r.receivedDate;
+        const nextReceivedAt = dateChanged ? null : (input.receivedAt ?? r.receivedAt);
+        return {
+          ...r,
+          ...input,
+          ...(nextReceivedAt !== undefined ? { receivedAt: nextReceivedAt } : {}),
+          updatedAt: nowISO(),
+        };
+      }),
     }));
   },
   deleteInventory(id: string) {
@@ -94,17 +127,42 @@ export const laundry = {
   },
   toggleInventory(id: string) {
     const ts = nowISO();
-    setState((s) => ({ ...s, inventory: s.inventory.map((r) => (r.id === id ? toggleDelivery(r, ts) : r)) }));
+    setState((s) => ({
+      ...s,
+      inventory: s.inventory.map((r) => (r.id === id ? toggleDelivery(r, ts) : r)),
+    }));
   },
   addService(input: ServiceInput) {
     const ts = nowISO();
-    const rec: ServiceRecord = { ...input, id: uid(), isDelivered: false, deliveredAt: null, createdAt: ts, updatedAt: ts };
+    const today = toISODate(new Date(ts));
+    const receivedDate = input.receivedDate || today;
+    const receivedAt = input.receivedAt ?? (receivedDate === today ? ts : null);
+    const rec: ServiceRecord = {
+      ...input,
+      receivedDate,
+      ...(receivedAt ? { receivedAt } : {}),
+      id: uid(),
+      isDelivered: false,
+      deliveredAt: null,
+      createdAt: ts,
+      updatedAt: ts,
+    };
     setState((s) => ({ ...s, services: [rec, ...s.services] }));
   },
   updateService(id: string, input: ServiceInput) {
     setState((s) => ({
       ...s,
-      services: s.services.map((r) => (r.id === id ? { ...r, ...input, updatedAt: nowISO() } : r)),
+      services: s.services.map((r) => {
+        if (r.id !== id) return r;
+        const dateChanged = input.receivedDate !== r.receivedDate;
+        const nextReceivedAt = dateChanged ? null : (input.receivedAt ?? r.receivedAt);
+        return {
+          ...r,
+          ...input,
+          ...(nextReceivedAt !== undefined ? { receivedAt: nextReceivedAt } : {}),
+          updatedAt: nowISO(),
+        };
+      }),
     }));
   },
   deleteService(id: string) {
@@ -112,7 +170,10 @@ export const laundry = {
   },
   toggleService(id: string) {
     const ts = nowISO();
-    setState((s) => ({ ...s, services: s.services.map((r) => (r.id === id ? toggleDelivery(r, ts) : r)) }));
+    setState((s) => ({
+      ...s,
+      services: s.services.map((r) => (r.id === id ? toggleDelivery(r, ts) : r)),
+    }));
   },
   setFourthLabel(label: string) {
     setState((s) => ({ ...s, fourthLabel: label.trim().slice(0, 40) }));
@@ -123,7 +184,11 @@ export const laundry = {
   },
   /** Replaces every record, e.g. from a validated JSON backup. */
   replaceAll(next: PersistedState) {
-    setState(() => ({ inventory: next.inventory, services: next.services, fourthLabel: next.fourthLabel }));
+    setState(() => ({
+      inventory: next.inventory,
+      services: next.services,
+      fourthLabel: next.fourthLabel,
+    }));
   },
 };
 
@@ -139,5 +204,9 @@ export function setSearchQuery(q: string) {
   queryListeners.forEach((l) => l());
 }
 export function useSearchQuery(): string {
-  return useSyncExternalStore(subscribeQuery, () => query, () => "");
+  return useSyncExternalStore(
+    subscribeQuery,
+    () => query,
+    () => "",
+  );
 }

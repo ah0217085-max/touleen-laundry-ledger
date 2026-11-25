@@ -12,20 +12,28 @@ interface Props {
   destructive?: boolean;
 }
 
-export function ConfirmDialog({ open, onOpenChange, title, message, confirmLabel, onConfirm, destructive }: Props) {
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  message,
+  confirmLabel,
+  onConfirm,
+  destructive,
+}: Props) {
   return (
     <GlassDialog
       open={open}
       onOpenChange={onOpenChange}
       title={title}
       description={message}
-      icon={<AlertTriangle className="size-5" />}
+      icon={<AlertTriangle className={destructive ? "size-5 text-destructive" : "size-5"} />}
     >
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
+      <div className="grid grid-cols-2 gap-2.5 pt-1">
+        <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
           تراجع
         </Button>
-        <Button variant={destructive ? "destructive" : "brand"} onClick={onConfirm}>
+        <Button variant={destructive ? "destructive" : "brand"} size="lg" onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>

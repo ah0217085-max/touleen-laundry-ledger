@@ -3,13 +3,14 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { InventoryRecord, InventorySectionKey, StatusFilter } from "@/lib/laundry/types";
-import { filterInventory, statusCounts } from "@/lib/laundry/records";
+import { filterInventory, statusCounts, summarizeRecords } from "@/lib/laundry/records";
 import { ITEM_COUNT_LABELS, SECTION_LABELS } from "@/lib/laundry/sections";
 import { formatNumber } from "@/lib/laundry/format";
 import { laundry, useLaundry, useSearchQuery } from "@/lib/laundry/store";
 import { NAV_ICONS, SECTION_ICONS } from "./icons";
 import { SectionHeader } from "./SectionHeader";
 import { StatusFilterBar } from "./StatusFilterBar";
+import { SectionSummaryStrip } from "./SectionSummaryStrip";
 import { InventoryList } from "./InventoryList";
 import { InventoryFormDialog } from "./InventoryFormDialog";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -26,14 +27,38 @@ export function InventorySection() {
   const [editing, setEditing] = useState<InventoryRecord | null>(null);
   const [deleting, setDeleting] = useState<InventoryRecord | null>(null);
 
-  const sectionRecords = useMemo(() => state.inventory.filter((r) => r.sectionKey === sub), [state.inventory, sub]);
-  const counts = useMemo(() => statusCounts(sectionRecords), [sectionRecords]);
-  const visible = useMemo(() => filterInventory(sectionRecords, status, query), [sectionRecords, status, query]);
+  const sectionRecords = useMemo(
+    () => state.inventory.filter((r) => r.sectionKey === sub),
+    [state.inventory, sub],
+  );
+  const searchMatched = useMemo(
+    () => filterInventory(sectionRecords, "all", query),
+    [sectionRecords, query],
+  );
+  const counts = useMemo(() => statusCounts(searchMatched), [searchMatched]);
+  const visible = useMemo(
+    () => filterInventory(searchMatched, status, ""),
+    [searchMatched, status],
+  );
+  const summary = useMemo(() => summarizeRecords(visible), [visible]);
   const NavIcon = NAV_ICONS.inventory;
 
   const openAdd = () => {
+    setDeleting(null);
     setEditing(null);
     setFormOpen(true);
+  };
+
+  const openEdit = (r: InventoryRecord) => {
+    setDeleting(null);
+    setEditing(r);
+    setFormOpen(true);
+  };
+
+  const openDelete = (r: InventoryRecord) => {
+    setFormOpen(false);
+    setEditing(null);
+    setDeleting(r);
   };
 
   return (
@@ -50,7 +75,11 @@ export function InventorySection() {
         }
       />
 
-      <div role="tablist" aria-label="القسم" className="glass mb-3 grid grid-cols-2 gap-1 rounded-2xl p-1">
+      <div
+        role="tablist"
+        aria-label="القسم"
+        className="glass mb-3 grid grid-cols-2 gap-1 rounded-2xl p-1"
+      >
         {TABS.map((key) => {
           const Icon = SECTION_ICONS[key];
           const active = sub === key;
@@ -64,10 +93,15 @@ export function InventorySection() {
               onClick={() => {
                 setSub(key);
                 setStatus("all");
+                setFormOpen(false);
+                setEditing(null);
+                setDeleting(null);
               }}
               className={
                 "flex min-h-12 items-center justify-center gap-2 rounded-xl text-base font-extrabold transition-all " +
-                (active ? "bg-brand shadow-glow" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")
+                (active
+                  ? "bg-brand shadow-glow"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")
               }
             >
               <Icon className="size-5" strokeWidth={2.3} />
@@ -85,9 +119,17 @@ export function InventorySection() {
         })}
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <StatusFilterBar value={status} onChange={setStatus} counts={counts} />
       </div>
+
+      {state.ready && (
+        <SectionSummaryStrip
+          summary={summary}
+          showPieces
+          filtered={Boolean(query.trim() || status !== "all")}
+        />
+      )}
 
       {!state.ready ? (
         <ListSkeleton />
@@ -100,26 +142,28 @@ export function InventorySection() {
         <InventoryList
           records={visible}
           countLabel={ITEM_COUNT_LABELS[sub]}
-          onEdit={(r) => {
-            setEditing(r);
-            setFormOpen(true);
-          }}
-          onDelete={setDeleting}
+          onEdit={openEdit}
+          onDelete={openDelete}
         />
       )}
 
-      <InventoryFormDialog open={formOpen} onOpenChange={setFormOpen} sectionKey={sub} editing={editing} />
+      <InventoryFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        sectionKey={sub}
+        editing={editing}
+      />
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="حذف السجل"
-        message={`هل تريد حذف سجل «${deleting?.customerName ?? ""}»؟ لا يمكن التراجع عن الحذف.`}
-        confirmLabel="حذف"
+        title="تأكيد حذف السجل"
+        message={`هل أنت متأكد من حذف سجل «${deleting?.customerName ?? ""}» (${formatNumber(deleting?.itemCount ?? 0)} قطعة)؟ لا يمكن التراجع عن الحذف.`}
+        confirmLabel="تأكيد الحذف"
         destructive
         onConfirm={() => {
           if (deleting) {
             laundry.deleteInventory(deleting.id);
-            toast("تم حذف السجل", { description: deleting.customerName });
+            toast.success("تم حذف السجل", { description: deleting.customerName });
           }
           setDeleting(null);
         }}

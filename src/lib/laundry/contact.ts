@@ -1,4 +1,6 @@
-import { clean } from "./format";
+import { clean, toLatinDigits } from "./format";
+
+export { toLatinDigits };
 
 /** Country code prepended to local numbers (e.g. 09xxxxxxxx) for WhatsApp links. */
 export const DEFAULT_COUNTRY_CODE = "963";
@@ -19,15 +21,11 @@ export const CONTACT_NOTICES: Record<ContactProblem, string> = {
   whatsapp: "الرقم غير صالح لواتساب — تأكد من الرقم",
 };
 
-/** Converts Arabic-Indic (٠-٩) and Persian (۰-۹) digits to Latin digits. */
-export function toLatinDigits(s: string): string {
-  return s
-    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-}
-
 /** Builds instant call / WhatsApp links from a free-typed phone number. */
-export function contactLinks(raw: string, countryCode: string = DEFAULT_COUNTRY_CODE): ContactLinks {
+export function contactLinks(
+  raw: string | null | undefined,
+  countryCode: string = DEFAULT_COUNTRY_CODE,
+): ContactLinks {
   const s = toLatinDigits(clean(raw));
   if (!s) return { tel: null, whatsapp: null, problem: "missing" };
   // Only digits and common separators are allowed.
@@ -35,7 +33,8 @@ export function contactLinks(raw: string, countryCode: string = DEFAULT_COUNTRY_
 
   const hasPlus = s.startsWith("+");
   const digits = s.replace(/\D/g, "");
-  const tel = digits.length >= 3 && digits.length <= 15 ? `tel:${hasPlus ? "+" : ""}${digits}` : null;
+  const tel =
+    digits.length >= 3 && digits.length <= 15 ? `tel:${hasPlus ? "+" : ""}${digits}` : null;
 
   let intl: string;
   if (hasPlus) intl = digits;

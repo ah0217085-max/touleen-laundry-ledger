@@ -24,7 +24,7 @@ function toDraft(r: InventoryRecord | null): InventoryDraft {
     customerNumber: r?.customerNumber ?? "",
     itemCount: r ? String(r.itemCount) : "",
     receivedDate: r?.receivedDate ?? todayISODate(),
-    invoiceAmount: r ? String(r.invoiceAmount) : "",
+    invoiceAmount: r?.invoiceAmount != null ? String(r.invoiceAmount) : "",
   };
 }
 
@@ -69,11 +69,20 @@ export function InventoryFormDialog({ open, onOpenChange, sectionKey, editing }:
     <GlassDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? `تعديل سجل ${SECTION_LABELS[sectionKey]}` : `إضافة سجل جديد — ${SECTION_LABELS[sectionKey]}`}
+      title={
+        editing
+          ? `تعديل سجل ${SECTION_LABELS[sectionKey]}`
+          : `إضافة سجل جديد — ${SECTION_LABELS[sectionKey]}`
+      }
       icon={<Icon className="size-5" />}
     >
       <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-        <Field id="inv-customerName" label="اسم الزبون" error={errors["customerName"]} icon={<User />}>
+        <Field
+          id="inv-customerName"
+          label="اسم الزبون"
+          error={errors["customerName"]}
+          icon={<User />}
+        >
           <input
             id="inv-customerName"
             className={`${inputClass} h-12`}
@@ -84,7 +93,13 @@ export function InventoryFormDialog({ open, onOpenChange, sectionKey, editing }:
             {...errProps("customerName")}
           />
         </Field>
-        <Field id="inv-customerNumber" label="رقم الزبون" error={errors["customerNumber"]} icon={<Phone />}>
+        <Field
+          id="inv-customerNumber"
+          label="رقم الزبون"
+          error={errors["customerNumber"]}
+          icon={<Phone />}
+          required={false}
+        >
           <input
             id="inv-customerNumber"
             className={`${inputClass} h-12 text-right`}
@@ -112,9 +127,11 @@ export function InventoryFormDialog({ open, onOpenChange, sectionKey, editing }:
         </Field>
         <Field
           id="inv-receivedDate"
-          label="تاريخ استلام السجاد أو الحرامات"
+          label="تاريخ الاستلام"
           error={errors["receivedDate"]}
           icon={<CalendarDays />}
+          required={false}
+          optionalLabel={editing ? "اختياري" : "تلقائي مع الوقت"}
         >
           <input
             id="inv-receivedDate"
@@ -130,6 +147,7 @@ export function InventoryFormDialog({ open, onOpenChange, sectionKey, editing }:
           label="الفاتورة المطلوبة (ل.س)"
           error={errors["invoiceAmount"]}
           icon={<Receipt />}
+          required={false}
           className="sm:col-span-2"
         >
           <input

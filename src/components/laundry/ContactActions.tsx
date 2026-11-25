@@ -8,7 +8,7 @@ const btn =
 const off = "cursor-not-allowed bg-muted text-muted-foreground/70";
 
 interface Props {
-  phone: string;
+  phone: string | null | undefined;
   customerName: string;
   className?: string;
   /** Icon-only buttons (labels stay available to screen readers), for dense tables. */
@@ -20,6 +20,14 @@ export function ContactActions({ phone, customerName, className, compact = false
   const links = useMemo(() => contactLinks(phone), [phone]);
   const b = cn(btn, compact && "w-9 justify-center px-0");
   const label = compact ? "sr-only" : undefined;
+
+  if (links.problem === "missing") {
+    return (
+      <div className={cn("flex items-center", className)}>
+        <span className="text-xs font-semibold text-muted-foreground">بدون رقم</span>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-wrap items-center gap-x-2 gap-y-1.5", className)}>
@@ -63,7 +71,10 @@ export function ContactActions({ phone, customerName, className, compact = false
         )}
       </span>
       {links.problem && (
-        <p role="status" className="flex basis-full items-center gap-1 text-xs font-bold text-destructive">
+        <p
+          role="status"
+          className="flex basis-full items-center gap-1 text-xs font-bold text-destructive"
+        >
           <AlertCircle className="size-3.5 shrink-0" />
           {CONTACT_NOTICES[links.problem]}
         </p>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Pencil, Tag, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { laundry, useLaundry } from "@/lib/laundry/store";
 import { inputClass } from "./Field";
@@ -20,6 +21,7 @@ export function FourthLabelEditor() {
           e.preventDefault();
           laundry.setFourthLabel(draft);
           setEditing(false);
+          toast.success(draft.trim() ? "تم حفظ التسمية الفرعية" : "تم مسح التسمية الفرعية");
         }}
       >
         <input
@@ -34,7 +36,13 @@ export function FourthLabelEditor() {
         <Button type="submit" variant="brand" size="icon-sm" aria-label="حفظ التسمية">
           <Check />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="إلغاء" onClick={() => setEditing(false)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="إلغاء"
+          onClick={() => setEditing(false)}
+        >
           <X />
         </Button>
       </form>

@@ -34,7 +34,8 @@ function text(v: unknown): string | null {
 interface Base {
   id: string;
   customerName: string;
-  invoiceAmount: number;
+  invoiceAmount: number | null;
+  receivedAt?: string | undefined;
   isDelivered: boolean;
   deliveredAt: string | null;
   createdAt: string;
@@ -44,14 +45,36 @@ interface Base {
 function base(o: Obj): Base | null {
   const id = clean(o["id"]);
   const customerName = text(o["customerName"]);
-  const invoiceAmount = num(o["invoiceAmount"]);
-  if (!id || !customerName || invoiceAmount === null || invoiceAmount < 0) return null;
+  const rawAmount = o["invoiceAmount"];
+  let invoiceAmount: number | null;
+  if (
+    rawAmount === undefined ||
+    rawAmount === null ||
+    (typeof rawAmount === "string" && rawAmount.trim() === "")
+  ) {
+    invoiceAmount = null;
+  } else {
+    const parsedAmount = num(rawAmount);
+    if (parsedAmount === null || parsedAmount < 0) return null;
+    invoiceAmount = parsedAmount;
+  }
+  if (!id || !customerName) return null;
   if (typeof o["isDelivered"] !== "boolean" || !isValidTimestamp(o["createdAt"])) return null;
   const isDelivered = o["isDelivered"];
   const createdAt = o["createdAt"];
   const deliveredAt = isDelivered && isValidTimestamp(o["deliveredAt"]) ? o["deliveredAt"] : null;
   const updatedAt = isValidTimestamp(o["updatedAt"]) ? o["updatedAt"] : createdAt;
-  return { id, customerName, invoiceAmount, isDelivered, deliveredAt, createdAt, updatedAt };
+  const receivedAt = isValidTimestamp(o["receivedAt"]) ? o["receivedAt"] : undefined;
+  return {
+    id,
+    customerName,
+    invoiceAmount,
+    ...(receivedAt ? { receivedAt } : {}),
+    isDelivered,
+    deliveredAt,
+    createdAt,
+    updatedAt,
+  };
 }
 
 /** Returns a clean carpet/blanket record, or null when the data is unusable. */
@@ -60,10 +83,17 @@ export function normalizeInventory(raw: unknown): InventoryRecord | null {
   const sectionKey = raw["sectionKey"] as InventorySectionKey;
   if (!INVENTORY_KEYS.includes(sectionKey)) return null;
   const b = base(raw);
-  const customerNumber = text(raw["customerNumber"]);
+  const customerNumber = raw["customerNumber"] == null ? "" : text(raw["customerNumber"]);
   const itemCount = num(raw["itemCount"]);
   const receivedDate = raw["receivedDate"];
-  if (!b || !customerNumber || itemCount === null || itemCount <= 0 || !Number.isInteger(itemCount)) return null;
+  if (
+    !b ||
+    customerNumber === null ||
+    itemCount === null ||
+    itemCount <= 0 ||
+    !Number.isInteger(itemCount)
+  )
+    return null;
   if (!isValidISODate(receivedDate)) return null;
   return { ...b, sectionKey, customerNumber, itemCount, receivedDate };
 }
@@ -74,9 +104,9 @@ export function normalizeService(raw: unknown): ServiceRecord | null {
   const sectionKey = raw["sectionKey"] as ServiceSectionKey;
   if (!SERVICE_KEYS.includes(sectionKey)) return null;
   const b = base(raw);
-  const phoneNumber = text(raw["phoneNumber"]);
+  const phoneNumber = raw["phoneNumber"] == null ? "" : text(raw["phoneNumber"]);
   const serviceDetails = text(raw["serviceDetails"]);
-  if (!b || !phoneNumber || !serviceDetails) return null;
+  if (!b || phoneNumber === null || !serviceDetails) return null;
   const rd = raw["receivedDate"];
   const receivedDate = isValidISODate(rd) ? rd : toISODate(new Date(b.createdAt));
   return { ...b, sectionKey, phoneNumber, serviceDetails, receivedDate };
@@ -88,7 +118,11 @@ export interface NormalizedState {
   invalid: number;
 }
 
-function collect<T extends { id: string }>(list: unknown, fn: (r: unknown) => T | null, seen: Set<string>) {
+function collect<T extends { id: string }>(
+  list: unknown,
+  fn: (r: unknown) => T | null,
+  seen: Set<string>,
+) {
   const out: T[] = [];
   let invalid = 0;
   for (const raw of Array.isArray(list) ? list : []) {
@@ -107,7 +141,8 @@ export function normalizeState(raw: unknown): NormalizedState {
   const seen = new Set<string>();
   const inv = collect(o["inventory"], normalizeInventory, seen);
   const svc = collect(o["services"], normalizeService, seen);
-  const fourthLabel = typeof o["fourthLabel"] === "string" ? o["fourthLabel"].trim().slice(0, 40) : "";
+  const fourthLabel =
+    typeof o["fourthLabel"] === "string" ? o["fourthLabel"].trim().slice(0, 40) : "";
   return {
     state: { inventory: inv.out, services: svc.out, fourthLabel },
     invalid: inv.invalid + svc.invalid,
@@ -158,10 +193,11 @@ const invOut = (r: InventoryRecord) => ({
   id: r.id,
   sectionKey: r.sectionKey,
   customerName: r.customerName,
-  customerNumber: r.customerNumber,
+  customerNumber: r.customerNumber ?? "",
   itemCount: r.itemCount,
   receivedDate: r.receivedDate,
-  invoiceAmount: r.invoiceAmount,
+  ...(r.receivedAt ? { receivedAt: r.receivedAt } : {}),
+  invoiceAmount: r.invoiceAmount ?? null,
   isDelivered: r.isDelivered,
   deliveredAt: r.deliveredAt,
   createdAt: r.createdAt,
@@ -172,10 +208,11 @@ const svcOut = (r: ServiceRecord) => ({
   id: r.id,
   sectionKey: r.sectionKey,
   customerName: r.customerName,
-  phoneNumber: r.phoneNumber,
+  phoneNumber: r.phoneNumber ?? "",
   serviceDetails: r.serviceDetails,
   receivedDate: r.receivedDate,
-  invoiceAmount: r.invoiceAmount,
+  ...(r.receivedAt ? { receivedAt: r.receivedAt } : {}),
+  invoiceAmount: r.invoiceAmount ?? null,
   isDelivered: r.isDelivered,
   deliveredAt: r.deliveredAt,
   createdAt: r.createdAt,
@@ -213,7 +250,8 @@ export const BACKUP_ERRORS = {
   wrongApp: "هذا الملف ليس نسخة احتياطية لمصبغة تولين.",
   newerVersion: "هذه النسخة صادرة من إصدار أحدث من التطبيق ولا يمكن قراءتها.",
   noRecords: "الملف لا يحتوي على سجلات مصبغة تولين.",
-  invalidRecords: (n: number) => `يحتوي الملف على ${n} سجل غير صالح أو مكرر، لذلك لم يتم استيراد أي شيء.`,
+  invalidRecords: (n: number) =>
+    `يحتوي الملف على ${n} سجل غير صالح أو مكرر، لذلك لم يتم استيراد أي شيء.`,
 } as const;
 
 export type ImportResult =
@@ -230,9 +268,11 @@ export function parseBackup(textContent: string): ImportResult {
     return { ok: false, error: BACKUP_ERRORS.notJson };
   }
   if (!isObj(data)) return { ok: false, error: BACKUP_ERRORS.noRecords };
-  if ("app" in data && data["app"] !== BACKUP_APP) return { ok: false, error: BACKUP_ERRORS.wrongApp };
+  if ("app" in data && data["app"] !== BACKUP_APP)
+    return { ok: false, error: BACKUP_ERRORS.wrongApp };
   const version = num(data["version"]);
-  if (version !== null && version > BACKUP_VERSION) return { ok: false, error: BACKUP_ERRORS.newerVersion };
+  if (version !== null && version > BACKUP_VERSION)
+    return { ok: false, error: BACKUP_ERRORS.newerVersion };
   if (!Array.isArray(data["inventory"]) || !Array.isArray(data["services"]))
     return { ok: false, error: BACKUP_ERRORS.noRecords };
 
@@ -240,5 +280,10 @@ export function parseBackup(textContent: string): ImportResult {
   if (invalid > 0) return { ok: false, error: BACKUP_ERRORS.invalidRecords(invalid) };
   state.inventory.sort(byNewest);
   state.services.sort(byNewest);
-  return { ok: true, state, inventoryCount: state.inventory.length, serviceCount: state.services.length };
+  return {
+    ok: true,
+    state,
+    inventoryCount: state.inventory.length,
+    serviceCount: state.services.length,
+  };
 }

@@ -10,21 +10,43 @@ interface Props {
   label: string;
   error?: string | undefined;
   icon?: ReactNode;
+  required?: boolean;
+  optionalLabel?: string;
   className?: string;
   children: ReactNode;
 }
 
-export function Field({ id, label, error, icon, className, children }: Props) {
+export function Field({
+  id,
+  label,
+  error,
+  icon,
+  required = true,
+  optionalLabel = "اختياري",
+  className,
+  children,
+}: Props) {
   return (
     <div className={cn("grid gap-1.5", className)}>
-      <label htmlFor={id} className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+      <label
+        htmlFor={id}
+        className="flex flex-wrap items-center gap-1.5 text-sm font-bold text-foreground"
+      >
         {icon && <span className="text-primary [&_svg]:size-4">{icon}</span>}
-        {label}
-        <span className="text-primary">*</span>
+        <span>{label}</span>
+        {required ? (
+          <span className="text-primary">*</span>
+        ) : (
+          <span className="text-xs font-semibold text-muted-foreground">({optionalLabel})</span>
+        )}
       </label>
       {children}
       {error && (
-        <p id={`${id}-error`} role="alert" className="flex items-center gap-1 text-xs font-bold text-destructive">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="flex items-center gap-1 text-xs font-bold text-destructive"
+        >
           <AlertCircle className="size-3.5" />
           {error}
         </p>

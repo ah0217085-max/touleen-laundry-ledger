@@ -3,19 +3,26 @@ import { Button } from "@/components/ui/button";
 
 export function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label="تعديل" title="تعديل">
-        <Pencil />
+    <div className="flex items-center gap-1.5">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onEdit}
+        aria-label="تعديل"
+        title="تعديل"
+        className="size-10 rounded-xl"
+      >
+        <Pencil className="size-4.5" />
       </Button>
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="icon"
         onClick={onDelete}
         aria-label="حذف"
         title="حذف"
-        className="hover:bg-destructive-soft hover:text-destructive"
+        className="size-10 rounded-xl hover:bg-destructive-soft hover:text-destructive"
       >
-        <Trash2 />
+        <Trash2 className="size-4.5" />
       </Button>
     </div>
   );

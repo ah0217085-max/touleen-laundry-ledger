@@ -5,17 +5,18 @@ export type SectionKey = InventorySectionKey | ServiceSectionKey;
 interface BaseRecord {
   id: string;
   customerName: string;
-  invoiceAmount: number;
+  invoiceAmount?: number | null | undefined;
+  receivedAt?: string | null | undefined;
   isDelivered: boolean;
   deliveredAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-/** Carpets / blankets: counted pieces with a received date. */
+/** Carpets / blankets: counted pieces with a received date/timestamp. */
 export interface InventoryRecord extends BaseRecord {
   sectionKey: InventorySectionKey;
-  customerNumber: string;
+  customerNumber?: string | null | undefined;
   itemCount: number;
   receivedDate: string; // YYYY-MM-DD
 }
@@ -23,7 +24,7 @@ export interface InventoryRecord extends BaseRecord {
 /** Tailoring / washing / ironing (fourth view) orders. */
 export interface ServiceRecord extends BaseRecord {
   sectionKey: ServiceSectionKey;
-  phoneNumber: string;
+  phoneNumber?: string | null | undefined;
   serviceDetails: string;
   receivedDate: string; // YYYY-MM-DD, defaults to the day the order was created
 }

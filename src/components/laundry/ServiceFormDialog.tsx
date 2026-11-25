@@ -24,7 +24,7 @@ function toDraft(r: ServiceRecord | null): ServiceDraft {
     phoneNumber: r?.phoneNumber ?? "",
     serviceDetails: r?.serviceDetails ?? "",
     receivedDate: r?.receivedDate ?? todayISODate(),
-    invoiceAmount: r ? String(r.invoiceAmount) : "",
+    invoiceAmount: r?.invoiceAmount != null ? String(r.invoiceAmount) : "",
   };
 }
 
@@ -68,11 +68,20 @@ export function ServiceFormDialog({ open, onOpenChange, sectionKey, editing }: P
     <GlassDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? `تعديل طلب — ${SECTION_LABELS[sectionKey]}` : `إضافة طلب جديد — ${SECTION_LABELS[sectionKey]}`}
+      title={
+        editing
+          ? `تعديل طلب — ${SECTION_LABELS[sectionKey]}`
+          : `إضافة طلب جديد — ${SECTION_LABELS[sectionKey]}`
+      }
       icon={<Icon className="size-5" />}
     >
       <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-        <Field id="svc-customerName" label="اسم الزبون" error={errors["customerName"]} icon={<User />}>
+        <Field
+          id="svc-customerName"
+          label="اسم الزبون"
+          error={errors["customerName"]}
+          icon={<User />}
+        >
           <input
             id="svc-customerName"
             className={`${inputClass} h-12`}
@@ -83,7 +92,13 @@ export function ServiceFormDialog({ open, onOpenChange, sectionKey, editing }: P
             {...errProps("customerName")}
           />
         </Field>
-        <Field id="svc-phoneNumber" label="رقم الهاتف" error={errors["phoneNumber"]} icon={<Phone />}>
+        <Field
+          id="svc-phoneNumber"
+          label="رقم الهاتف"
+          error={errors["phoneNumber"]}
+          icon={<Phone />}
+          required={false}
+        >
           <input
             id="svc-phoneNumber"
             className={`${inputClass} h-12 text-right`}
@@ -112,7 +127,14 @@ export function ServiceFormDialog({ open, onOpenChange, sectionKey, editing }: P
             {...errProps("serviceDetails")}
           />
         </Field>
-        <Field id="svc-receivedDate" label="تاريخ الاستلام" error={errors["receivedDate"]} icon={<CalendarDays />}>
+        <Field
+          id="svc-receivedDate"
+          label="تاريخ الاستلام"
+          error={errors["receivedDate"]}
+          icon={<CalendarDays />}
+          required={false}
+          optionalLabel={editing ? "اختياري" : "تلقائي مع الوقت"}
+        >
           <input
             id="svc-receivedDate"
             type="date"
@@ -122,7 +144,13 @@ export function ServiceFormDialog({ open, onOpenChange, sectionKey, editing }: P
             {...errProps("receivedDate")}
           />
         </Field>
-        <Field id="svc-invoiceAmount" label="الفاتورة المطلوبة (ل.س)" error={errors["invoiceAmount"]} icon={<Receipt />}>
+        <Field
+          id="svc-invoiceAmount"
+          label="الفاتورة المطلوبة (ل.س)"
+          error={errors["invoiceAmount"]}
+          icon={<Receipt />}
+          required={false}
+        >
           <input
             id="svc-invoiceAmount"
             type="number"
