@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { ServiceRecord, ServiceSectionKey, StatusFilter } from "@/lib/laundry/types";
 import { filterServices, statusCounts, summarizeRecords } from "@/lib/laundry/records";
 import { SECTION_LABELS, SERVICE_DETAILS_LABELS } from "@/lib/laundry/sections";
-import { laundry, useLaundry, useSearchQuery } from "@/lib/laundry/store";
+import { laundry, useLaundry } from "@/lib/laundry/store";
 import { SECTION_ICONS } from "./icons";
 import { SectionHeader } from "./SectionHeader";
 import { StatusFilterBar } from "./StatusFilterBar";
@@ -24,7 +24,6 @@ interface Props {
 
 export function ServiceSection({ sectionKey, subtitle, extra }: Props) {
   const state = useLaundry();
-  const query = useSearchQuery();
   const [status, setStatus] = useState<StatusFilter>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRecord | null>(null);
@@ -34,12 +33,11 @@ export function ServiceSection({ sectionKey, subtitle, extra }: Props) {
     () => state.services.filter((r) => r.sectionKey === sectionKey),
     [state.services, sectionKey],
   );
-  const searchMatched = useMemo(
-    () => filterServices(sectionRecords, "all", query),
-    [sectionRecords, query],
+  const counts = useMemo(() => statusCounts(sectionRecords), [sectionRecords]);
+  const visible = useMemo(
+    () => filterServices(sectionRecords, status, ""),
+    [sectionRecords, status],
   );
-  const counts = useMemo(() => statusCounts(searchMatched), [searchMatched]);
-  const visible = useMemo(() => filterServices(searchMatched, status, ""), [searchMatched, status]);
   const summary = useMemo(() => summarizeRecords(visible), [visible]);
   const Icon = SECTION_ICONS[sectionKey];
 
@@ -80,19 +78,18 @@ export function ServiceSection({ sectionKey, subtitle, extra }: Props) {
         <StatusFilterBar value={status} onChange={setStatus} counts={counts} />
       </div>
 
-      {state.ready && (
-        <SectionSummaryStrip
-          summary={summary}
-          filtered={Boolean(query.trim() || status !== "all")}
-        />
-      )}
+      {state.ready && <SectionSummaryStrip summary={summary} filtered={status !== "all"} />}
 
       {!state.ready ? (
         <ListSkeleton />
       ) : visible.length === 0 ? (
         <EmptyState
-          title={query ? "لا توجد نتائج مطابقة" : "لا توجد طلبات هنا"}
-          hint={query ? "جرّب اسماً أو رقماً آخر" : "اضغط «إضافة طلب جديد» لإضافة أول طلب"}
+          title="لا توجد طلبات هنا"
+          hint={
+            status === "all"
+              ? "اضغط «إضافة طلب جديد» لإضافة أول طلب"
+              : "لا توجد طلبات مطابقة للحالة المحددة"
+          }
         />
       ) : (
         <ServiceList

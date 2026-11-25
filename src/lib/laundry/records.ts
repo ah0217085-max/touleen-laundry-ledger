@@ -1,5 +1,6 @@
 import type { InventoryRecord, ServiceRecord, StatusFilter } from "./types";
 import { clean, toLatinDigits } from "./format";
+import { SECTION_LABELS } from "./sections";
 
 /** Flip delivery status; stamps deliveredAt when delivered and clears it when undone. */
 export function toggleDelivery<T extends InventoryRecord | ServiceRecord>(
@@ -60,6 +61,38 @@ export function filterServices(records: ServiceRecord[], status: StatusFilter, q
   return records.filter(
     (r) => matchesStatus(r, status) && matchesRecordQuery(query, r.customerName, r.phoneNumber),
   );
+}
+
+export type GlobalSearchMatch =
+  | { kind: "inventory"; record: InventoryRecord; sectionLabel: string }
+  | { kind: "service"; record: ServiceRecord; sectionLabel: string };
+
+/** Searches simultaneously across all inventory and service sections in real time. */
+export function searchAllRecords(
+  inventory: InventoryRecord[],
+  services: ServiceRecord[],
+  rawQuery: string,
+): GlobalSearchMatch[] {
+  if (!clean(rawQuery)) return [];
+  const invMatches: GlobalSearchMatch[] = filterInventory(inventory, "all", rawQuery).map(
+    (record) => ({
+      kind: "inventory",
+      record,
+      sectionLabel: SECTION_LABELS[record.sectionKey],
+    }),
+  );
+  const svcMatches: GlobalSearchMatch[] = filterServices(services, "all", rawQuery).map(
+    (record) => ({
+      kind: "service",
+      record,
+      sectionLabel: SECTION_LABELS[record.sectionKey],
+    }),
+  );
+  return [...invMatches, ...svcMatches].sort((a, b) => {
+    const ta = a.record.updatedAt || a.record.createdAt || a.record.receivedDate;
+    const tb = b.record.updatedAt || b.record.createdAt || b.record.receivedDate;
+    return tb.localeCompare(ta);
+  });
 }
 
 export function statusCounts(records: { isDelivered: boolean }[]) {

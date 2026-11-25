@@ -4,7 +4,7 @@ import { CONTACT_NOTICES, contactLinks } from "@/lib/laundry/contact";
 import { cn } from "@/lib/utils";
 
 const btn =
-  "inline-flex h-9 shrink-0 items-center gap-1 rounded-xl px-2.5 text-xs font-extrabold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/30 [&_svg]:size-4";
+  "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/30 [&_svg]:size-4";
 const off = "cursor-not-allowed bg-muted text-muted-foreground/70";
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 /** Customer number with one-tap call and WhatsApp buttons right beside it. */
 export function ContactActions({ phone, customerName, className, compact = false }: Props) {
   const links = useMemo(() => contactLinks(phone), [phone]);
-  const b = cn(btn, compact && "w-9 justify-center px-0");
+  const b = cn(btn, compact && "min-h-9 h-9 w-9 justify-center px-0");
   const label = compact ? "sr-only" : undefined;
 
   if (links.problem === "missing") {

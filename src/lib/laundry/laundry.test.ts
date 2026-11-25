@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { validateInventory, validateService, MESSAGES } from "./validation";
 import { computeStats, computeScopedStats, scopeStats } from "./stats";
-import { toggleDelivery, filterInventory, filterServices, summarizeRecords } from "./records";
+import {
+  toggleDelivery,
+  filterInventory,
+  filterServices,
+  searchAllRecords,
+  summarizeRecords,
+} from "./records";
 import type { InventoryRecord, ServiceRecord } from "./types";
 import { contactLinks } from "./contact";
 import {
@@ -195,6 +201,65 @@ describe("search", () => {
     expect(filterInventory(invRecs, "all", "سلمي").map((r) => r.id)).toEqual(["3"]);
     expect(filterInventory(invRecs, "all", "0935123").map((r) => r.id)).toEqual(["1"]);
     expect(filterInventory(invRecs, "all", "٠٩٩٨٧٦٥").map((r) => r.id)).toEqual(["2"]);
+  });
+
+  it("searches simultaneously across all inventory and service sections with section labels", () => {
+    const invRecs = [
+      inv({
+        id: "c1",
+        sectionKey: "carpets",
+        customerName: "أحمد السجاد",
+        customerNumber: "0935111222",
+        updatedAt: "2026-11-25T09:00:00.000Z",
+      }),
+      inv({
+        id: "b1",
+        sectionKey: "blankets",
+        customerName: "سعاد الحرامات",
+        customerNumber: "0944000111",
+        updatedAt: "2026-11-25T08:00:00.000Z",
+      }),
+    ];
+    const svcRecs = [
+      svc({
+        id: "t1",
+        sectionKey: "tailoring",
+        customerName: "احمد الخياطة",
+        phoneNumber: "0988777666",
+        updatedAt: "2026-11-25T10:00:00.000Z",
+      }),
+      svc({
+        id: "w1",
+        sectionKey: "washing",
+        customerName: "نور الغسيل",
+        phoneNumber: "0935999888",
+        updatedAt: "2026-11-25T07:00:00.000Z",
+      }),
+      svc({
+        id: "f1",
+        sectionKey: "fourth",
+        customerName: "رامي الكوي",
+        phoneNumber: "٠٩٣٥ ١١١-٣٣٣",
+        updatedAt: "2026-11-25T11:00:00.000Z",
+      }),
+    ];
+
+    expect(searchAllRecords(invRecs, svcRecs, "   ")).toEqual([]);
+
+    const nameMatches = searchAllRecords(invRecs, svcRecs, "احمد");
+    expect(nameMatches.map((m) => [m.record.id, m.sectionLabel])).toEqual([
+      ["t1", "التصليح والخياطة"],
+      ["c1", "السجاد"],
+    ]);
+
+    const phoneMatches = searchAllRecords(invRecs, svcRecs, "٠٩٣٥١١١");
+    expect(phoneMatches.map((m) => [m.record.id, m.sectionLabel])).toEqual([
+      ["f1", "الكوي"],
+      ["c1", "السجاد"],
+    ]);
+
+    const allWith0935 = searchAllRecords(invRecs, svcRecs, "0935");
+    expect(allWith0935.map((m) => m.record.id)).toEqual(["f1", "c1", "w1"]);
   });
 });
 

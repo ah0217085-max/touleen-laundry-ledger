@@ -17,6 +17,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { WaveBackground } from "@/components/laundry/WaveBackground";
 import { AppHeader } from "@/components/laundry/AppHeader";
+import { GlobalSearchResults } from "@/components/laundry/GlobalSearchResults";
 import { MainNav } from "@/components/laundry/MainNav";
 import { PinGate } from "@/components/laundry/PinGate";
 import { onSaveError } from "@/lib/laundry/store";
@@ -54,9 +55,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          تعذّر تحميل الصفحة
-        </h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">تعذّر تحميل الصفحة</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           حدث خطأ ما. حاول التحديث أو العودة للرئيسية.
         </p>
@@ -89,7 +88,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "مصبغة تولين" },
-      { name: "description", content: "مصبغة تولين — إدارة السجاد والحرامات والتصليح والخياطة والغسيل والإحصائيات" },
+      {
+        name: "description",
+        content: "مصبغة تولين — إدارة السجاد والحرامات والتصليح والخياطة والغسيل والإحصائيات",
+      },
       { name: "theme-color", content: "#C2185B" },
       { name: "application-name", content: "مصبغة تولين" },
       { name: "mobile-web-app-capable", content: "yes" },
@@ -154,17 +156,18 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <WaveBackground />
       <PinGate>
-      <div className="relative mx-auto min-h-dvh w-full max-w-5xl px-3 pt-[env(safe-area-inset-top)] pb-32 sm:px-5 md:pb-12">
-        <AppHeader />
-        <MainNav />
-        <main
-          key={pathname}
-          className="mt-5 animate-in fade-in slide-in-from-bottom-3 duration-300"
-        >
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </main>
-      </div>
+        <div className="relative mx-auto min-h-dvh w-full max-w-5xl px-3 pt-[env(safe-area-inset-top)] pb-32 sm:px-5 md:pb-12">
+          <AppHeader />
+          <GlobalSearchResults />
+          <MainNav />
+          <main
+            key={pathname}
+            className="mt-5 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          >
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </main>
+        </div>
       </PinGate>
       <Toaster />
     </QueryClientProvider>

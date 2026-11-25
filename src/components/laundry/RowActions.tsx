@@ -10,7 +10,7 @@ export function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete:
         onClick={onEdit}
         aria-label="تعديل"
         title="تعديل"
-        className="size-10 rounded-xl"
+        className="size-11 rounded-xl"
       >
         <Pencil className="size-4.5" />
       </Button>
@@ -20,7 +20,7 @@ export function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete:
         onClick={onDelete}
         aria-label="حذف"
         title="حذف"
-        className="size-10 rounded-xl hover:bg-destructive-soft hover:text-destructive"
+        className="size-11 rounded-xl hover:bg-destructive-soft hover:text-destructive"
       >
         <Trash2 className="size-4.5" />
       </Button>
