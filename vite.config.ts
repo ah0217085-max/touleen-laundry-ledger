@@ -34,21 +34,27 @@ const clientOnly = (plugins: Plugin[]): Plugin[] =>
 
 export default defineConfig({
   vite: {
-    base: "./",
     server: {
       host: "0.0.0.0",
       port: 3000,
       allowedHosts: true,
     },
   },
-  nitro: {
-    preset: "node-server",
-    output: {
-      dir: "dist",
-      serverDir: "dist/server",
-      publicDir: "dist/client",
-    },
-  },
+  // On Netlify the app needs its server-rendering function, so build with Nitro's Netlify preset
+  // (static files stay in dist/client, the publish directory). Elsewhere keep the Node server build.
+  nitro: process.env["NETLIFY"]
+    ? {
+        preset: "netlify",
+        output: { publicDir: "dist/client" },
+      }
+    : {
+        preset: "node-server",
+        output: {
+          dir: "dist",
+          serverDir: "dist/server",
+          publicDir: "dist/client",
+        },
+      },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
