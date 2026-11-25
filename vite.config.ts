@@ -17,16 +17,16 @@ import { VitePWA } from "vite-plugin-pwa";
 const CLIENT_OUT = "dist/client";
 // Icons and the manifest are copied after the client bundle, so list them for offline storage by hand.
 const PUBLIC_SHELL = [
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/apple-touch-icon.png",
-  "/favicon.png",
+  "manifest.webmanifest",
+  "icon-192.png",
+  "icon-512.png",
+  "apple-touch-icon.png",
+  "favicon.png",
 ];
 const publicEntry = (url: string) => ({
   url,
   revision: createHash("md5")
-    .update(readFileSync(`public${url}`))
+    .update(readFileSync(`public/${url}`))
     .digest("hex"),
 });
 const clientOnly = (plugins: Plugin[]): Plugin[] =>
@@ -34,6 +34,7 @@ const clientOnly = (plugins: Plugin[]): Plugin[] =>
 
 export default defineConfig({
   vite: {
+    base: "./",
     server: {
       host: "0.0.0.0",
       port: 3000,
